@@ -1,0 +1,8 @@
+<library path="omron_aria_hw_interface">
+  <class name="omron/OmronAria"
+         type="omron::OmronAria"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+    </description>
+  </class>
+</library>
