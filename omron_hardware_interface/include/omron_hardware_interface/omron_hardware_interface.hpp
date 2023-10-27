@@ -61,6 +61,13 @@ public:
 
   hardware_interface::return_type perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
                                                             const std::vector<std::string>& stop_interfaces) final;
+
+  const std::string HW_FORWARD_VEL = std::string("linear/") + hardware_interface::HW_IF_VELOCITY;
+  const std::string HW_TURN_VEL = std::string("angular/") + hardware_interface::HW_IF_VELOCITY;
+  const std::string HW_IF_POSE  {"pose"};
+  const std::vector<std::string> HW_POSE = {"pose/linear/x",
+                                            "pose/linear/y",
+                                            "pose/angular/z"};
 private:
   rclcpp::Logger m_logger = rclcpp::get_logger("OmronAria");
 
@@ -72,17 +79,12 @@ private:
     std::string user;
     std::string pwd;
   } m_connection_data;
+  std::string m_prefix;
 
   std::vector<double> m_twist__command;
   std::vector<double> m_twist__states;
   std::vector<double> m_pose__states; // p.x,p.y,p.z,q.w,q.x,q.y,q.z
 
-  const std::string HW_FORWARD_VEL = "forward";
-  const std::string HW_TURN_VEL = "turn";
-  const std::string GPIO_POSE = "sensor_pose";
-  const std::vector<std::string> HW_POSE = {"pose.position.x",
-                                            "pose.position.y",
-                                            "pose.orientation.z"};
   enum class CommandType
   {
     Pose, // not implemented

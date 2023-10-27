@@ -1,12 +1,16 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.actions import LogInfo
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 
-from launch_ros.actions import Node
+from launch.actions import TimerAction
+
+from launch_ros.actions import Node, LifecycleNode
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.parameter_descriptions import ParameterValue
+from launch_ros.event_handlers import OnStateTransition
 
 
 def generate_launch_description():
@@ -39,45 +43,32 @@ def generate_launch_description():
     )
     robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}
 
+    controller_parameters = PathJoinSubstitution([FindPackageShare("omron_controller"), "config", "parameters.yaml"])
+
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description],
+        parameters=[robot_description, controller_parameters],
         output="both"
     )
-    robot_state_pub_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[robot_description],
-    )
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        condition=IfCondition(gui),
+
+
+    spawn_controller = Node(
+      package="controller_manager",
+      executable="spawner",
+      output="screen",
+#      parameters=[robot_description, controller_parameters]
+      arguments=["omron_velocity_controller"]
     )
 
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
-
-    # Delay rviz start after `joint_state_broadcaster`
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[rviz_node],
-        )
+    delay_controller_after_manager = TimerAction(
+      period = 10.0,
+      actions = [spawn_controller]
     )
 
     nodes = [
         control_node,
-        robot_state_pub_node,
-        joint_state_broadcaster_spawner,
-        delay_rviz_after_joint_state_broadcaster_spawner,
+        delay_controller_after_manager
     ]
 
     return LaunchDescription(declared_arguments + nodes)

@@ -15,24 +15,23 @@
           <hardware>
             <plugin>omron/OmronAria</plugin>
             <param name="update_frequency">50</param>
+            <param name="prefix">omron_base</param>
             <param name="ip_address">192.168.1.32</param>
             <param name="port">7272</param>
             <param name="user">admin</param>
 <!--              <param name="password"></param>-->
           </hardware>
         </xacro:unless>
-        <gpio name="forward_velocity">
-          <command_interface name="forward"/>
-          <state_interface name="forward"  />
+        <gpio name="omron_base/velocity">
+          <command_interface name="linear/velocity"/>
+          <command_interface name="angular/velocity"/>
+          <state_interface name="linear/velocity"  />
+          <state_interface name="angular/velocity"/>
         </gpio>
-        <gpio name="turn_velocity">
-          <command_interface name="turn"/>
-          <state_interface name="turn"/>
-        </gpio>
-        <gpio name="sensor_pose">
-          <state_interface name="pose.position.x"/>
-          <state_interface name="pose.position.y"/>
-          <state_interface name="pose.orientation.z"/>
+        <gpio name="omron_base/pose">
+          <state_interface name="linear/x"/>
+          <state_interface name="linear/y"/>
+          <state_interface name="angular/z"/>
         </gpio>
       </ros2_control>
     </xacro:macro>

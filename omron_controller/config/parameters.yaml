@@ -1,0 +1,38 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+
+    omron_velocity_controller:
+      type: omron/OmronController
+
+omron_velocity_controller:
+  ros__parameters:
+    cmd_vel_topic: "cmd_vel"
+    tf:
+      use_tf: true
+      to: "base_link"
+      from: "map"
+    interfaces:
+      velocity:
+        prefix: "omron_base/velocity"
+        command:
+          - "linear/velocity"
+          - "angular/velocity"
+        states:
+          - "linear/velocity"
+          - "angular/velocity"
+      pose:
+        prefix: "omron_base/pose"
+        states:
+        - "linear/x"
+        - "linear/y"
+        - "angular/z"
+      reference:
+        prefix: "omron_base/reference"
+        command:
+          - "linear/x"
+          - "linear/y"
+          - "linear/z"
+          - "angular/x"
+          - "angular/y"
+          - "angular/z"
