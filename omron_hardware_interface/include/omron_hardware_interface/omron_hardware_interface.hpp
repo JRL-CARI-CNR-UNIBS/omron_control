@@ -21,27 +21,6 @@ namespace omron {
 class OmronAria : public hardware_interface::SystemInterface
 {
 public:
-//  struct StatusData{
-//    double battery_voltage, temperature;
-//    struct Pose{
-//      double x,y,rz;
-//    } pose;
-//    struct Twist{
-//      double x,y,rz;
-//    } vel;
-//    struct Docking{
-//      enum class DockState : int {
-//        Undocked,
-//        IsDocking,
-//        Docked,
-//        IsUndocking,
-//        Unknown
-//      } state;
-//      int forced_dock{std::numeric_limits<int>::quiet_NaN()},
-//          sec_until_shutdown{std::numeric_limits<int>::quiet_NaN()};
-//    } dock;
-//  };
-
   OmronAria();
   ~OmronAria(){}
 
@@ -93,15 +72,23 @@ private:
 
   ArClientBase m_client;
   ArArgumentBuilder m_args;
-  ArClientSimpleConnector m_client_connector;
-  ArClientHandlerRobotUpdate m_client_update;
+  std::shared_ptr<ArClientSimpleConnector> m_client_connector;
+//  ArClientHandlerRobotUpdate m_client_update;
 
-//  ArFunctor1C<OmronAria, ArNetPacket*> get_pose_status__ftor;
-  ArFunctor1C<OmronAria, ArClientHandlerRobotUpdate::RobotData> get_pose_status__ftor;
+  ArFunctor1C<OmronAria, ArNetPacket*> get_pose_status__ftor;
+//  ArFunctor1C<OmronAria, ArClientHandlerRobotUpdate::RobotData> get_pose_status__ftor;
   ArFunctor1C<OmronAria, ArNetPacket*> get_dock_status__ftor;
 
-//  StatusData* m_status_data;
-//  void get_pose_status__cb(ArNetPacket *packet);
+  struct StatusData{
+    double battery_voltage, temperature;
+    struct Pose{
+      double x,y,rz;
+    } pose;
+    struct Twist{
+      double x,y,rz;
+    } vel;
+  } m_status_data;
+  void get_pose_status__cb(ArNetPacket *packet);
 //  void localise(); // TODO: da implementare con un'altra command_interface
 
   // TODO: implementa wall_time per limitare gli spostamenti

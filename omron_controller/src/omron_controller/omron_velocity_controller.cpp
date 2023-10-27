@@ -91,6 +91,7 @@ namespace omron {
     m_state_interface_names.insert(m_state_interface_names.end(),
                                    state_interface_names.begin(),
                                    state_interface_names.end());
+    state_interfaces_.reserve(m_state_interface_names.size());
 
     // command interfaces
     m_command_interface_names = m_params.interfaces.velocity.command;
@@ -171,11 +172,6 @@ namespace omron {
   OmronController::update_and_write_commands(const rclcpp::Time&, const rclcpp::Duration &)
   {
     // Status
-    RCLCPP_DEBUG(this->get_node()->get_logger(), "----");
-    for(auto& s : state_interfaces_)
-      RCLCPP_DEBUG_STREAM(this->get_node()->get_logger(),"state_interface(" << s.get_name() << "): " << s.get_value());
-    RCLCPP_DEBUG(this->get_node()->get_logger(), "----");
-
     geometry_msgs::msg::TwistStamped twist_msg;
     twist_msg.header.stamp = this->get_node()->get_clock()->now();
     twist_msg.twist.linear.x = state_interfaces_.at(0).get_value();

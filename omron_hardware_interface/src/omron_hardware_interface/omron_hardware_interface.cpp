@@ -2,8 +2,9 @@
 
 namespace omron {
 OmronAria::OmronAria() :
-  m_client_connector(&m_args),
-  m_client_update(&m_client)
+//  m_client_connector(&m_args),
+//  m_client_update(&m_client),
+  get_pose_status__ftor(this, &OmronAria::get_pose_status__cb)
 {
   #ifdef DEBUG_ON
   #include "rcutils/error_handling.h"
@@ -84,8 +85,8 @@ OmronAria::export_state_interfaces()
 {
   RCLCPP_DEBUG(m_logger, "Exporting states interfaces");
   std::vector<hardware_interface::StateInterface> state_interfaces;
-//  size_t forward_idx = std::distance(info_.gpios.begin(), std::find_if(info_.gpios.begin(), info_.gpios.end(), [this](const hardware_interface::ComponentInfo& in){return in.state_interfaces.at(0).name == this->HW_FORWARD_VEL;}));
-//  size_t turn_idx    = std::distance(info_.gpios.begin(), std::find_if(info_.gpios.begin(), info_.gpios.end(), [this](const hardware_interface::ComponentInfo& in){return in.state_interfaces.at(0).name == this->HW_TURN_VEL;}));
+// size_t forward_idx = std::distance(info_.gpios.begin(), std::find_if(info_.gpios.begin(), info_.gpios.end(), [this](const hardware_interface::ComponentInfo& in){return in.state_interfaces.at(0).name == this->HW_FORWARD_VEL;}));
+// size_t turn_idx    = std::distance(info_.gpios.begin(), std::find_if(info_.gpios.begin(), info_.gpios.end(), [this](const hardware_interface::ComponentInfo& in){return in.state_interfaces.at(0).name == this->HW_TURN_VEL;}));
   auto velocity_interface__itor = std::find_if(info_.gpios.begin(),
                                                info_.gpios.end(),
                                                [this](const hardware_interface::ComponentInfo& in)
@@ -102,6 +103,7 @@ OmronAria::export_state_interfaces()
       velocity_interface__itor->name, this->HW_FORWARD_VEL, &m_twist__states[0]));
   state_interfaces.emplace_back(hardware_interface::StateInterface(
       velocity_interface__itor->name, this->HW_TURN_VEL, &m_twist__states[1]));
+
   auto pose_gpio__itor = std::find_if(info_.gpios.begin(), info_.gpios.end(), [this](const hardware_interface::ComponentInfo& in){return in.name == m_prefix + "/" + HW_IF_POSE;});
   if(pose_gpio__itor == info_.gpios.end())
   {
@@ -160,24 +162,32 @@ OmronAria::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
   m_args.addPlain(m_connection_data.user.c_str());
   m_args.addPlain("-pwd");
   m_args.addPlain(m_connection_data.pwd.c_str());
-  m_client_connector.parseArgs();
+  m_client_connector = std::make_shared<ArClientSimpleConnector>(&m_args);
+  m_client_connector->parseArgs();
   RCLCPP_DEBUG(m_logger, "Connection parameter: OK");
 
-  m_client_update.requestUpdates(m_hz);
-//  m_client_update.addUpdateCB(&get_pose_status__ftor);
-
-//  m_client.addHandler("updateNumbers", &get_pose_status__ftor);
-//  m_client.request("updateNumbers", 50);
+//  m_client_update.requestUpdates(m_hz);
+////  m_client_update.addUpdateCB(&get_pose_status__ftor);
 
   RCLCPP_INFO(m_logger, "Aria configuration: OK");
   //Connect
-  if (!m_client_connector.connectClient(&m_client))
+  if (!m_client_connector->connectClient(&m_client))
   {
     if (m_client.wasRejected())
-
       RCLCPP_FATAL_STREAM(m_logger, "Server" << m_client.getHost() << "rejected connection, exiting");
     else
       RCLCPP_FATAL_STREAM(m_logger, "Could not connect to server" << m_client.getHost() <<  "exiting");
+    return hardware_interface::CallbackReturn::FAILURE;
+  }
+
+  if(m_client.dataExists("updateNumbers"))
+  {
+    m_client.addHandler("updateNumbers", &get_pose_status__ftor);
+    m_client.request("updateNumbers", 50);
+  }
+  else
+  {
+    RCLCPP_FATAL(m_logger, "'updateNumbers' request cannot be set. Exiting...");
     return hardware_interface::CallbackReturn::FAILURE;
   }
 
@@ -211,27 +221,26 @@ OmronAria::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 hardware_interface::return_type
 OmronAria::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/)
 {
-//  request_pose_status();
-  if(m_client.getRunningWithLock())
+  if(m_client.getRunning())
   {
-    m_client_update.lock();
-    m_pose__states[0]  = m_client_update.getX();
-    m_pose__states[1]  = m_client_update.getY();
-    m_pose__states[2]  = m_client_update.getTh();
-    m_twist__states[0] = m_client_update.getVel();
-    m_twist__states[1] = m_client_update.getRotVel();
-    m_client_update.unlock();
+//    m_client_update.lock();
+//    m_pose__states[0]  = m_client_update.getX();
+//    m_pose__states[1]  = m_client_update.getY();
+//    m_pose__states[2]  = m_client_update.getTh();
+//    m_twist__states[0] = m_client_update.getVel();
+//    m_twist__states[1] = m_client_update.getRotVel();
+//    m_client_update.unlock();
+    m_pose__states[0] = m_status_data.pose.x;
+    m_pose__states[1] = m_status_data.pose.y;
+    m_pose__states[2] = m_status_data.pose.rz;
+    m_twist__states[0] = m_status_data.vel.x;
+    m_twist__states[1] = m_status_data.vel.rz;
   }
   else
   {
     RCLCPP_ERROR(m_logger, "Aria client is not running");
     return hardware_interface::return_type::ERROR;
   }
-//      m_pose__states[0]  = m_status_data->pose.x;
-//      m_pose__states[1]  = m_status_data->pose.y;
-//      m_pose__states[2]  = m_status_data->pose.rz;
-//      m_twist__states[0] = m_status_data->vel.x;
-//      m_twist__states[1] = m_status_data->vel.rz;
 
   return hardware_interface::return_type::OK;
 }
@@ -255,17 +264,17 @@ OmronAria::perform_command_mode_switch(const std::vector<std::string>& start_int
  * Private members and utility functions
  */
 
-//void OmronAria::get_pose_status__cb(ArNetPacket *packet)
-//{
-//  m_status_data->battery_voltage =   ( (double) packet->bufToByte2() )/10.0;
-//  m_status_data->pose.x =              (double) packet->bufToByte4();
-//  m_status_data->pose.y =              (double) packet->bufToByte4();
-//  m_status_data->pose.rz =             (double) packet->bufToByte2();
-//  m_status_data->vel.x =               (double) packet->bufToByte2();
-//  m_status_data->vel.y =               (double) packet->bufToByte2();
-//  m_status_data->vel.rz =              (double) packet->bufToByte2();
-//  m_status_data->temperature =         (double) packet->bufToByte();
-//}
+void OmronAria::get_pose_status__cb(ArNetPacket *packet)
+{
+  m_status_data.battery_voltage =   ( (double) packet->bufToByte2() )/10.0;
+  m_status_data.pose.x =              (double) packet->bufToByte4();
+  m_status_data.pose.y =              (double) packet->bufToByte4();
+  m_status_data.pose.rz =             (double) packet->bufToByte2();
+  m_status_data.vel.x =               (double) packet->bufToByte2();
+  m_status_data.vel.y =               (double) packet->bufToByte2();
+  m_status_data.vel.rz =              (double) packet->bufToByte2();
+  m_status_data.temperature =         (double) packet->bufToByte();
+}
 
 void OmronAria::set_cmd_vel(const double& forward, const double& turn)
 {
