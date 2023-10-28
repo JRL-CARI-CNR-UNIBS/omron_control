@@ -45,13 +45,16 @@ def generate_launch_description():
 
     controller_parameters = PathJoinSubstitution([FindPackageShare("omron_controller"), "config", "parameters.yaml"])
 
+    ###################
+    ### Controllers ###
+    ###################
+
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[robot_description, controller_parameters],
         output="both"
     )
-
 
     spawn_controller = Node(
       package="controller_manager",
@@ -66,9 +69,54 @@ def generate_launch_description():
       actions = [spawn_controller]
     )
 
+    ###################
+    ### Other nodes ###
+    ###################
+
+    map_and_laser_node = Node(
+            package='omron_ros2_agv',
+            executable='omron_ros2_agv_node',
+            namespace='omron',
+            remappings= [('/omron/map', '/map'),('/omron/map_metadata','/map_metadata')],
+            output='screen')
+
+    pcl_to_ls =    Node(
+            package='pointcloud_to_laserscan', executable='pointcloud_to_laserscan_node',
+            remappings={('cloud_in', 'omron/cloud_in'),('scan', 'omron/scan')},
+            parameters=[{
+                'target_frame': 'omron/base_link',
+                'transform_tolerance': 0.01,
+                'min_height': 0.0,
+                'max_height': 1.0,
+                'angle_min': -2.35,  # -M_PI/2
+                'angle_max':  2.35,  # M_PI/2
+                'angle_increment': 0.007,
+                'scan_time': 0.1,
+                'range_min': 0.1,
+                'range_max': 24.0,
+                'use_inf': False,
+                'inf_epsilon': 1.0
+            }],
+            name='pointcloud_to_laserscan'
+        )
+
+    laser_throttle = Node(
+            package='topic_tools',
+            executable='throttle',
+            namespace='omron',
+            parameters=[{
+                'input_topic': 'scan',
+                'throttle_type': 'messages',
+                'msgs_per_sec': 2.0,
+                'output_topic': 'scan_rviz'
+            }],
+            arguments=['messages scan 2 scan_rviz'],
+            output='screen')
+
     nodes = [
         control_node,
-        delay_controller_after_manager
+        delay_controller_after_manager,
+        map_and_laser_node
     ]
 
     return LaunchDescription(declared_arguments + nodes)
