@@ -70,6 +70,10 @@ private:
     Twist
   };
 
+  struct MaxVelocity{
+    double linear, angular;
+  } m_max_vel;
+
   ArClientBase m_client;
   ArArgumentBuilder m_args;
   std::shared_ptr<ArClientSimpleConnector> m_client_connector;

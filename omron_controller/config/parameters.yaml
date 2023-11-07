@@ -7,6 +7,9 @@ controller_manager:
 
 omron_velocity_controller:
   ros__parameters:
+    feedback:
+      use_open_loop: true
+      kp: 1.0
     cmd_vel_topic: "cmd_vel"
     tf:
       use_tf: true
@@ -31,8 +34,8 @@ omron_velocity_controller:
         prefix: "omron_base/reference"
         command:
           - "linear/x"
-          - "linear/y"
-          - "linear/z"
-          - "angular/x"
-          - "angular/y"
+#          - "linear/y"
+#          - "linear/z"
+#          - "angular/x"
+#          - "angular/y"
           - "angular/z"

@@ -75,6 +75,8 @@ OmronAria::on_init(const hardware_interface::HardwareInfo& info)
   m_connection_data.pwd = "admin";
   m_prefix = info.hardware_parameters.at("prefix");
   m_hz = std::stoi(info.hardware_parameters.at("update_frequency"));
+  m_max_vel.linear = std::stod(info.hardware_parameters.at("max_linear_vel"));
+  m_max_vel.angular = std::stod(info.hardware_parameters.at("max_angular_vel"));
 
   RCLCPP_INFO(m_logger, "init ok");
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -267,23 +269,25 @@ OmronAria::perform_command_mode_switch(const std::vector<std::string>& start_int
 void OmronAria::get_pose_status__cb(ArNetPacket *packet)
 {
   m_status_data.battery_voltage =   ( (double) packet->bufToByte2() )/10.0;
-  m_status_data.pose.x =              (double) packet->bufToByte4();
-  m_status_data.pose.y =              (double) packet->bufToByte4();
+  m_status_data.pose.x =            (  (double) packet->bufToByte4() )/1000.0;
+  m_status_data.pose.y =            (  (double) packet->bufToByte4() )/1000.0;
   m_status_data.pose.rz =             (double) packet->bufToByte2();
-  m_status_data.vel.x =               (double) packet->bufToByte2();
-  m_status_data.vel.y =               (double) packet->bufToByte2();
+  m_status_data.vel.x =             (  (double) packet->bufToByte2() )/1000.0;
   m_status_data.vel.rz =              (double) packet->bufToByte2();
+  m_status_data.vel.y =             (  (double) packet->bufToByte2() )/1000.0;
   m_status_data.temperature =         (double) packet->bufToByte();
 }
 
 void OmronAria::set_cmd_vel(const double& forward, const double& turn)
 {
+  double fw = forward / m_max_vel.linear;
+  double tr = turn / m_max_vel.angular;
   if(fabs(forward) > 0.001 || fabs(turn) > 0.001)
   {
     ArNetPacket packet;
     m_is_cmd_valid = true;
-    packet.doubleToBuf(100 * forward);
-    packet.doubleToBuf((turn * 2)/0.0174);
+    packet.doubleToBuf(100 * fw);
+    packet.doubleToBuf((tr * 2)/0.0174);
     packet.doubleToBuf(100);
     packet.doubleToBuf(0.0);
     m_client.requestOnce("ratioDrive", &packet);

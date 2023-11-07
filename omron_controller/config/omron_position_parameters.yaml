@@ -1,53 +1,52 @@
-omron_controller:
-  feedback:
-    use_open_loop: {
-      type: bool,
-      default_value: true,
-      description: "open or closed velocity loop",
-    }
-    kp: {
-      type: double,
-      default_value: 1.0,
-      description: "P-gain",
-      validation: {
-        gt_eq<>: 0.0
-      }
-    }
+omron_position_controller:
   cmd_vel_topic: {
     type: string,
-    default_value: "command",
+    default_value: "/cmd_vel",
     description: "Topic to read when not in chain",
     validation: {
       not_empty<>: null
     }
   }
-  tf:
-    use_tf: {
-      type: bool,
-      default_value: true,
-      description: "broadcast pose through tf"
+  cmd_pos_topic: {
+    type: string,
+    default_value: "/cmd_pos",
+    description: "Topic to read when not in chain",
+    validation: {
+      not_empty<>: null
     }
-    from: {
-      type: string,
-      default_value: "",
-      description: "transform from ...",
-      validation: {
-        not_empty<>: null
-      }
+  }
+  feedback:
+    kp: {
+      type: double_array,
+      default_value: [0.0, 0.0],
+      description: P-gain, linear and angular
     }
-    to: {
-      type: string,
-      default_value: "",
-      description: "transform to ...",
-      validation: {
-        not_empty<>: null
-      }
-    }
+#  tf:
+#    use_tf: {
+#      type: bool,
+#      default_value: true,
+#      description: "broadcast pose through tf"
+#    }
+#    from: {
+#      type: string,
+#      default_value: "",
+#      description: "transform from ...",
+#      validation: {
+#        not_empty<>: null
+#      }
+#    }
+#    to: {
+#      type: string,
+#      default_value: "",
+#      description: "transform to ...",
+#      validation: {
+#        not_empty<>: null
+#      }
+#    }
   interfaces:
     velocity:
       prefix: {
         type: string,
-        default_value: "omron_base",
         description: "Prefix of the interfaces"
       }
       command: {
@@ -83,7 +82,6 @@ omron_controller:
     reference:
       prefix: {
         type: string,
-        default_value: "omron_base/reference",
         description: "Prefix of the interfaces"
       }
       command: {

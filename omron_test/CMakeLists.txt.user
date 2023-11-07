@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 6.0.2, 2023-10-31T14:20:21. -->
+<!-- Written by QtCreator 6.0.2, 2023-10-31T14:41:53. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -104,8 +104,8 @@
 -DCMAKE_PREFIX_PATH:STRING=%{Qt:QT_INSTALL_PREFIX}
 -DCMAKE_C_COMPILER:STRING=%{Compiler:Executable:C}
 -DCMAKE_CXX_COMPILER:STRING=%{Compiler:Executable:Cxx}</value>
-    <value type="QString" key="CMake.Source.Directory">/home/laplace/projects/omron_ws/src/omron_control/omron_controller</value>
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/laplace/projects/omron_ws/build/omron_controller</value>
+    <value type="QString" key="CMake.Source.Directory">/home/laplace/projects/omron_ws/src/omron_control/omron_test</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/laplace/projects/omron_ws/build/omron_test</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <valuelist type="QVariantList" key="CMakeProjectManager.MakeStep.BuildTargets">
@@ -166,11 +166,15 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">omron_test_node</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">CMakeProjectManager.CMakeRunConfiguration.omron_test_node</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">omron_test_node</value>
+    <value type="QString" key="RunConfiguration.Arguments">--ros-args --params-file ~/projects/omron_ws/src/omron_control/omron_test/config/test_parameters.yaml</value>
+    <value type="bool" key="RunConfiguration.Arguments.multi">true</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
+    <value type="bool" key="RunConfiguration.UseTerminal">false</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/home/laplace/projects/omron_ws/build/omron_test</value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>

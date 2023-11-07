@@ -1,20 +1,20 @@
-#ifndef OMRON_VELOCITY_CONTROLLER_HPP
-#define OMRON_VELOCITY_CONTROLLER_HPP
+#ifndef OMRON_POSITION_CONTROLLER_HPP
+#define OMRON_POSITION_CONTROLLER_HPP
 
+#include "rclcpp/rclcpp.hpp"
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "realtime_tools/realtime_buffer.h"
 #include "geometry_msgs/msg/twist_stamped.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
 
-#include "tf2_ros/transform_broadcaster.h"
-#include "tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
 
-#include "omron_velocity_controller_parameters.hpp"
-
-//#include della libreria parametri
+#include "omron_position_controller_parameters.hpp"
 
 namespace omron {
-class OmronController : public controller_interface::ChainableControllerInterface
+class OmronPositionController : public controller_interface::ChainableControllerInterface
 {
 
 public:
@@ -45,28 +45,29 @@ private:
 
   controller_interface::return_type update_reference_from_subscribers() override;
 
-  std::shared_ptr<omron_controller::ParamListener> m_param_listener;
-  omron_controller::Params m_params;
+  std::shared_ptr<omron_position_controller::ParamListener> m_param_listener;
+  omron_position_controller::Params m_params;
 
-  bool m_use_open_loop;
-  double m_kp;
+  realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr> m_rt_buffer_vel__ptr;
+  realtime_tools::RealtimeBuffer<std_msgs::msg::Float64MultiArray::SharedPtr> m_rt_buffer_pos__ptr;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_ff_vel__sub;
+  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr m_ref_pos__sub;
 
-  realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr> m_rt_buffer__ptr;
-  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_cmd_vel__sub;
-
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_status_vel__pub;
-  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr m_status_pose__pub;
-
-  std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf__broad;
+  std::unique_ptr<tf2_ros::TransformListener> m_tf__listener;
+  std::unique_ptr<tf2_ros::Buffer> m_tf__buffer;
 
   std::vector<std::string> m_state_interface_names,
                            m_command_interface_names,
                            m_reference_interface_names;
 
-  std::string status_twist_topic {"status/velocity"};
-  std::string status_pose_topic {"status/pose"};
-  std::string cmd_vel_topic;
+
+  struct TopicNames{
+    std::string ff_vel;
+    std::string ref_pos;
+  } m_topics;
+
+  std::vector<double> m_kp = {0.0, 0.0};
 };
 }
 
-#endif // OMRON_VELOCITY_CONTROLLER_HPP
+#endif // OMRON_POSITION_CONTROLLER_HPP
