@@ -6,7 +6,13 @@ omron_test_node:
     max_acc_in_m: 1.0 # m/s^2
     max_rot_vel_in_deg: 30.0 # deg/s
     max_rot_acc_in_deg: 300.0 # deg/s^2
-    update_period_in_ms: 50 # ms
+    motion_law:
+      max_vel_in_m: [0.1, 0.2]
+      max_acc_in_m: [0.2, 0.4]
+      max_rot_vel_in_deg: [10.0]
+      max_rot_acc_in_deg: [100.0]
+    update_period_in_ms: 10 #50 # ms
+
     movements: [0]
     values:    [2.0]
 

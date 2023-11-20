@@ -4,7 +4,6 @@
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
-#include "rosbag2_cpp/writer.hpp"
 #include <iostream>
 #include <chrono>
 
@@ -71,13 +70,14 @@ public:
 
     RCLCPP_INFO(this->get_logger(), "Start in ");
     rclcpp::sleep_for(1s);
-    RCLCPP_INFO(this->get_logger(), "...3");
+    RCLCPP_INFO(this->get_logger(), "...III");
     rclcpp::sleep_for(1s);
-    RCLCPP_INFO(this->get_logger(), "...2");
+    RCLCPP_INFO(this->get_logger(), "...II");
     rclcpp::sleep_for(1s);
-    RCLCPP_INFO(this->get_logger(), "...1");
+    RCLCPP_INFO(this->get_logger(), "...I");
     rclcpp::sleep_for(1s);
     RCLCPP_INFO(this->get_logger(), "Starting!");
+
     this->on_main();
   }
 
@@ -172,8 +172,17 @@ public:
     }
     RCLCPP_INFO(get_logger(), "All movements completed.");
   }
-protected:
 
+  bool set_home()
+  {
+
+  }
+
+  bool go_home()
+  {
+
+  }
+protected:
 
   enum class MoveType{
     LINEAR = 0,
@@ -198,87 +207,6 @@ protected:
   geometry_msgs::msg::PoseStamped m_pose_feedback;
 };
 
-//class BagWriter : public rclcpp::Node
-//{
-//public:
-//  BagWriter() : rclcpp::Node("test_bag_writer")
-//  {
-//    RCLCPP_WARN(get_logger(), "Creating BagWriter");
-//    this->declare_parameter("cmd_vel_topic",       rclcpp::ParameterType::PARAMETER_STRING);
-//    this->declare_parameter("state_pose_topic",    rclcpp::ParameterType::PARAMETER_STRING);
-//    this->declare_parameter("state_vel_topic",     rclcpp::ParameterType::PARAMETER_STRING);
-//    this->declare_parameter("bag_path",            rclcpp::ParameterType::PARAMETER_STRING);
-
-//    m_topics["cmd_vel"] =    this->get_parameter("cmd_vel_topic").as_string();
-//    m_topics["state_pose"] = this->get_parameter("state_pose_topic").as_string();
-//    m_topics["state_vel"] =  this->get_parameter("state_vel_topic").as_string();
-
-//    rclcpp::SubscriptionOptions options;
-//    options.callback_group = m_cb_group;
-//    m_cmd_twist__sub = this->create_subscription<geometry_msgs::msg::TwistStamped>(m_topics["cmd_vel"],
-//                                                                             5,
-//                                                                             std::bind(&BagWriter::cmd_twist__cb, this,
-//                                                                                       std::placeholders::_1), options);
-//    m_state_pose__sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(m_topics["state_pose"],
-//                                                                             10,
-//                                                                             std::bind(&BagWriter::pose__cb, this,
-//                                                                                       std::placeholders::_1), options);
-//    m_state_twist__sub = this->create_subscription<geometry_msgs::msg::TwistStamped>(m_topics["state_vel"],
-//                                                                               10,
-//                                                                               std::bind(&BagWriter::twist__cb, this,
-//                                                                                         std::placeholders::_1), options);
-//    m_cb_group = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-//    m_path_bags =   this->get_parameter("bag_path").as_string();
-//    m_bag_writer = std::make_unique<rosbag2_cpp::Writer>();
-//    m_bag_writer->open(m_path_bags + "/test_move_" + std::to_string(get_clock()->now().nanoseconds()));
-//    m_bag_writer->create_topic({m_topics["cmd_vel"], "geometry_msgs/msg/TwistStamped", rmw_get_serialization_format(), ""});
-//    m_bag_writer->create_topic({m_topics["state_pose"], "geometry_msgs/msg/PoseStamped", rmw_get_serialization_format(), ""});
-//    m_bag_writer->create_topic({m_topics["state_vel"], "geometry_msgs/msg/TwistStamped", rmw_get_serialization_format(), ""});
-
-//  }
-//  ~BagWriter()
-//  {
-//    RCLCPP_INFO(get_logger(), "Exiting");
-//    m_bag_writer->close();
-//  }
-//  int m_twist_count__dbg {0}, m_pose_count__dbg {0}, m_cmd_twist_count__dbg {0};
-//private:
-//  void pose__cb(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
-//  {
-//    ++m_pose_count__dbg;
-//    rclcpp::SerializedMessage serial_msg;
-//    m_serial_pose.serialize_message(msg.get(), &serial_msg);
-//    m_bag_writer->write(serial_msg, m_topics["state_pose"], "geometry_msgs/msg/PoseStamped", get_clock()->now());
-//  }
-
-//  void twist__cb(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
-//  {
-//    ++m_twist_count__dbg;
-//    rclcpp::SerializedMessage serial_msg;
-//    m_serial_twist.serialize_message(msg.get(), &serial_msg);
-//    m_bag_writer->write(serial_msg, m_topics["state_vel"], "geometry_msgs/msg/TwistStamped", msg->header.stamp);
-//  }
-
-//  void cmd_twist__cb(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
-//  {
-//    RCLCPP_INFO(get_logger(), "QUI");
-//    ++m_cmd_twist_count__dbg;
-//    rclcpp::SerializedMessage serial_msg;
-//    m_serial_twist.serialize_message(msg.get(), &serial_msg);
-//    m_bag_writer->write(serial_msg, m_topics["cmd_vel"], "geometry_msgs/msg/TwistStamped", msg->header.stamp);
-//  }
-
-//  std::unordered_map<std::string, std::string> m_topics;
-//  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_cmd_twist__sub;
-//  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr m_state_pose__sub;
-//  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_state_twist__sub;
-//  rclcpp::CallbackGroup::SharedPtr m_cb_group;
-//  std::string m_path_bags;
-
-//  std::unique_ptr<rosbag2_cpp::Writer> m_bag_writer;
-//  rclcpp::Serialization<geometry_msgs::msg::PoseStamped> m_serial_pose;
-//  rclcpp::Serialization<geometry_msgs::msg::TwistStamped> m_serial_twist;
-//};
 
 int main(int argc, char** argv)
 {

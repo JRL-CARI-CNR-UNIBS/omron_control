@@ -21,10 +21,6 @@ find_package(rosbag2_cpp REQUIRED)
 ## Test Node ##
 ###############
 add_executable(omron_test_node src/omron_test/test_move.cpp)
-#target_include_directories(omron_test_node PUBLIC
-#  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
-#  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-#  )
 ament_target_dependencies(omron_test_node
   rclcpp
   geometry_msgs
@@ -32,6 +28,22 @@ ament_target_dependencies(omron_test_node
   )
 install(TARGETS omron_test_node
     DESTINATION lib/${PROJECT_NAME})
+
+##############
+## Bag Node ##
+##############
+add_executable(omron_test_bag_node src/omron_test/save_bag.cpp)
+ament_target_dependencies(omron_test_bag_node
+  rclcpp
+  geometry_msgs
+  rosbag2_cpp
+  )
+install(TARGETS omron_test_bag_node
+    DESTINATION lib/${PROJECT_NAME})
+
+############
+## Others ##
+############
 
 install(DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME})

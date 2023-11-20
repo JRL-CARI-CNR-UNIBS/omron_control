@@ -19,7 +19,7 @@ omron_position_controller:
     kp: {
       type: double_array,
       default_value: [0.0, 0.0],
-      description: P-gain, linear and angular
+      description: "P-gain, linear and angular"
     }
 #  tf:
 #    use_tf: {

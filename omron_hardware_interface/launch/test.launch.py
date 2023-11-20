@@ -116,7 +116,9 @@ def generate_launch_description():
     nodes = [
         control_node,
         delay_controller_after_manager,
-        map_and_laser_node
+        map_and_laser_node,
+        pcl_to_ls,
+        laser_throttle
     ]
 
     return LaunchDescription(declared_arguments + nodes)

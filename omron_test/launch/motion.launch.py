@@ -1,11 +1,12 @@
 # This Python file uses the following encoding: utf-8
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, EmitEvent, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, EmitEvent, RegisterEventHandler, IncludeLaunchDescription
 from launch.substitutions import PathJoinSubstitution, PythonExpression, LaunchConfiguration
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -47,6 +48,20 @@ def generate_launch_description():
       on_exit=[EmitEvent(event=Shutdown(reason="Motion terminated"))]
     )
   )
+
+  ################
+  ## Navigation ##
+  ######################################
+  ## For return home after every move ##
+  ######################################
+  launch_include = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource(
+          PathJoinSubstitution(
+              FindPackageShare('omron_test'),
+              'launch',
+              'return.launch.py'))
+  )
+
   to_launch = [save_bags_arg,
                motion_node,
                rosbag_record,
