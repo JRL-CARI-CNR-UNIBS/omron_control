@@ -260,14 +260,14 @@ public:
 
     auto now = this->get_clock()->now();
     std::chrono::seconds time_elapsed;
-    while(!m_tf_buffer->canTransform("base_link","map", now) && time_elapsed < 10s)
+    while(!m_tf_buffer->canTransform("base_link","odom", now) && time_elapsed < 10s)
     {
       this->get_clock()->sleep_for(500ms);
     }
-    if(m_tf_buffer->canTransform("base_link","map", now))
+    if(m_tf_buffer->canTransform("base_link","odom", now))
     {
 //      m_home = m_pose__msg;
-      geometry_msgs::msg::TransformStamped tf = m_tf_buffer->lookupTransform("base_link","map",now);
+      geometry_msgs::msg::TransformStamped tf = m_tf_buffer->lookupTransform("base_link","odom",now);
       m_home.header = tf.header;
       m_home.pose.position.x = tf.transform.translation.x;
       m_home.pose.position.y = tf.transform.translation.y;
