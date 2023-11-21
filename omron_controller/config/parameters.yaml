@@ -15,6 +15,7 @@ omron_velocity_controller:
       use_tf: true
       to: "base_link"
       from: "map"
+      odom: "omron/odom"
     interfaces:
       velocity:
         prefix: "omron_base/velocity"

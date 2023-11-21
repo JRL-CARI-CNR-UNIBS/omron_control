@@ -85,7 +85,7 @@ def generate_launch_description():
             package='pointcloud_to_laserscan', executable='pointcloud_to_laserscan_node',
             remappings={('cloud_in', 'omron/cloud_in'),('scan', 'omron/scan')},
             parameters=[{
-                'target_frame': 'omron/base_link',
+                'target_frame': 'base_link',
                 'transform_tolerance': 0.01,
                 'min_height': 0.0,
                 'max_height': 1.0,

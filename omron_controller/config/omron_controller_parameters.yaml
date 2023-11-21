@@ -43,6 +43,14 @@ omron_controller:
         not_empty<>: null
       }
     }
+    odom: {
+      type: string,
+      default_value: "",
+      description: "... passing through odometry ...",
+      validation: {
+        not_empty<>: null
+      }
+    }
   interfaces:
     velocity:
       prefix: {
