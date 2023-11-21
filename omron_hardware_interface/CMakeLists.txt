@@ -21,7 +21,14 @@ set(PACKAGES_REQUIRED_HERE
   pluginlib
 )
 
+set(MAP_AND_LASER_REQUIRED
+  nav_msgs)
+
 foreach(package IN ITEMS ${PACKAGES_REQUIRED_HERE})
+  find_package(${package} REQUIRED)
+endforeach()
+
+foreach(package IN ITEMS ${MAP_AND_LASER_REQUIRED})
   find_package(${package} REQUIRED)
 endforeach()
 
@@ -32,10 +39,12 @@ find_package(geometry_msgs REQUIRED)
 
 set(ADD_CPP_FILE
   src/${PROJECT_NAME}/omron_hardware_interface.cpp
+  src/${PROJECT_NAME}/omron_map_client.cpp
 )
 
 set(ADD_HPP_FILE # only for IDE visualization
   include/${PROJECT_NAME}/omron_hardware_interface.hpp
+  include/${PROJECT_NAME}/omron_map_client.hpp
 )
 
 add_library(omron_aria_hw_interface SHARED
@@ -56,7 +65,8 @@ target_link_libraries(omron_aria_hw_interface
   Aria
   ArNetworking)
 ament_target_dependencies(omron_aria_hw_interface
-  ${PACKAGES_REQUIRED_HERE})
+  ${PACKAGES_REQUIRED_HERE}
+  ${MAP_AND_LASER_REQUIRED})
 
 
 target_compile_definitions(omron_aria_hw_interface PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
@@ -67,27 +77,27 @@ pluginlib_export_plugin_description_file(hardware_interface plugin.xml)
 ## TEST NODES ##
 ################
 
-add_executable(omron_jog
-  src/node/jog_test.cpp)
-ament_target_dependencies(omron_jog
-  ${PACKAGES_REQUIRED_HERE}
-  std_msgs
-  geometry_msgs)
-target_link_libraries(omron_jog
-  Aria
-  ArNetworking)
-target_include_directories(omron_jog PUBLIC
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-  /usr/local/include/Aria/
-  /usr/local/include/ArNetworking/)
+#add_executable(omron_jog
+#  src/node/jog_test.cpp)
+#ament_target_dependencies(omron_jog
+#  ${PACKAGES_REQUIRED_HERE}
+#  std_msgs
+#  geometry_msgs)
+#target_link_libraries(omron_jog
+#  Aria
+#  ArNetworking)
+#target_include_directories(omron_jog PUBLIC
+#  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+#  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+#  /usr/local/include/Aria/
+#  /usr/local/include/ArNetworking/)
 
-install(
-  TARGETS omron_jog
-  EXPORT export_omron_jog
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
-  ARCHIVE DESTINATION lib/${PROJECT_NAME}
-  RUNTIME DESTINATION bin/${PROJECT_NAME})
+#install(
+#  TARGETS omron_jog
+#  EXPORT export_omron_jog
+#  LIBRARY DESTINATION lib/${PROJECT_NAME}
+#  ARCHIVE DESTINATION lib/${PROJECT_NAME}
+#  RUNTIME DESTINATION bin/${PROJECT_NAME})
 
 ###############
 ### INSTALL ###

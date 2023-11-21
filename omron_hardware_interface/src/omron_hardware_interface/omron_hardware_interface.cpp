@@ -1,4 +1,5 @@
 #include "omron_hardware_interface/omron_hardware_interface.hpp"
+#include "omron_hardware_interface/omron_map_client.hpp"
 
 namespace omron {
 OmronAria::OmronAria() :
@@ -297,6 +298,12 @@ void OmronAria::set_cmd_vel(const double& forward, const double& turn)
     m_is_cmd_valid = false;
   }
 }
+
+/*
+ * Map and Laser
+ */
+
+
 
 } // omron
 
