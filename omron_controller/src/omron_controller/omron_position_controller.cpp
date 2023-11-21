@@ -52,7 +52,9 @@ namespace omron {
     m_params = m_param_listener->get_params();
     m_topics.ff_vel = m_params.cmd_vel_topic;
     m_topics.ref_pos = m_params.cmd_pos_topic;
-    m_kp = m_params.feedback.kp;
+    m_k1 = m_params.feedback.k1;
+    m_k2 = m_params.feedback.k2;
+    m_k3 = m_params.feedback.k3;
 
     // Publisher, subscribers, tf
     m_ff_vel__sub = this->get_node()->create_subscription<geometry_msgs::msg::TwistStamped>(m_topics.ff_vel, 10, [this](const geometry_msgs::msg::TwistStamped::SharedPtr msg)
@@ -100,7 +102,7 @@ namespace omron {
     // Reference interfaces
     if(m_params.interfaces.reference.command.size() != 2)
     {
-      RCLCPP_ERROR(get_node()->get_logger(), "Reference names should be 2, given: %d", m_params.interfaces.reference.command.size());
+      RCLCPP_ERROR(get_node()->get_logger(), "Reference names should be 2, given: %ld", m_params.interfaces.reference.command.size());
       return controller_interface::CallbackReturn::ERROR;
     }
     m_reference_interface_names = m_params.interfaces.reference.command;
@@ -251,7 +253,7 @@ namespace omron {
   OmronPositionController::update_and_write_commands(const rclcpp::Time&, const rclcpp::Duration &)
   {
 
-    m_tf__buffer->canTransform()
+//    m_tf__buffer->canTransform();
     // Command
     if(std::isnan(reference_interfaces_.at(0)) || std::isnan(reference_interfaces_.at(1)))
     {
@@ -260,9 +262,11 @@ namespace omron {
       command_interfaces_.at(1).set_value(0.0);
       return controller_interface::return_type::ERROR;
     }
+    const double z1 =
+    command_interfaces_.at(0) = m_k1 *
+//    command_interfaces_.at(0) = m_kp[0] * (reference_interfaces_.at(0) - ) + (*ff_vel)->twist.linear.x;
+//    command_interfaces_.at(1) = m_kp[1] * (reference_interfaces_.at(1) - ) + (*ff_vel)->twist.angular.z;
 
-    command_interfaces_.at(0) = m_kp[0] * (reference_interfaces_.at(0) - ) + (*ff_vel)->twist.linear.x;
-    command_interfaces_.at(1) = m_kp[1] * (reference_interfaces_.at(1) - ) + (*ff_vel)->twist.angular.z;
   }
 
 } // omron

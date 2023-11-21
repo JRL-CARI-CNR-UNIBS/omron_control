@@ -4,6 +4,7 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include <tf2_ros/static_transform_broadcaster.h>
 
 namespace omron {
   controller_interface::CallbackReturn OmronController::on_init()
@@ -112,6 +113,24 @@ namespace omron {
     m_use_open_loop = m_params.feedback.use_open_loop;
     m_kp = m_params.feedback.kp;
 
+    if(m_params.tf.use_tf)
+    {
+      geometry_msgs::msg::TransformStamped tf_odom;
+      tf_odom.header.frame_id = m_params.tf.from;
+      tf_odom.child_frame_id = "odom";
+      tf_odom.header.stamp = this->get_node()->get_clock()->now();
+      tf_odom.transform.translation.x = 0.0;
+      tf_odom.transform.translation.y = 0.0;
+      tf_odom.transform.translation.z = 0.0;
+      tf_odom.transform.rotation.x = 0.0;
+      tf_odom.transform.rotation.y = 0.0;
+      tf_odom.transform.rotation.z = 0.0;
+      tf_odom.transform.rotation.w = 1.0;
+      auto static_tf__broad = tf2_ros::StaticTransformBroadcaster(this->get_node());
+      static_tf__broad.sendTransform(tf_odom);
+      RCLCPP_WARN(this->get_node()->get_logger(), "Static odom published");
+    }
+
     return controller_interface::CallbackReturn::SUCCESS;
   }
 
@@ -200,7 +219,7 @@ namespace omron {
     {
       geometry_msgs::msg::TransformStamped tf_msg;
       tf_msg.header.stamp = twist_msg.header.stamp;
-      tf_msg.header.frame_id = m_params.tf.from;
+      tf_msg.header.frame_id = "odom"; //m_params.tf.from;
       tf_msg.child_frame_id = m_params.tf.to;
       tf_msg.transform.translation.x = pose_msg.pose.position.x;
       tf_msg.transform.rotation.z = pose_msg.pose.orientation.z;
@@ -218,16 +237,8 @@ namespace omron {
     }
 
     double reference[2];
-    if(m_use_open_loop)
-    {
-      reference[0] = reference_interfaces_.at(0);
-      reference[1] = reference_interfaces_.at(1);
-    }
-    else
-    { // P controller
-      reference[0] = m_kp * (reference_interfaces_.at(0) - state_interfaces_.at(0).get_value());
-      reference[1] = m_kp * (reference_interfaces_.at(1) - state_interfaces_.at(1).get_value());
-    }
+    reference[0] = reference_interfaces_.at(0);
+    reference[1] = reference_interfaces_.at(1);
     reference[0] = std::fabs(reference[0]) > 0.1? reference[0] : 0.0; // m/s
     reference[1] = std::fabs(reference[1]) > 1? reference[1] : 0.0; // deg/s
     command_interfaces_.at(0).set_value(reference[0]);

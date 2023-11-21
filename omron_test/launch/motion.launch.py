@@ -24,8 +24,8 @@ def generate_launch_description():
   )
 
   config = PathJoinSubstitution([FindPackageShare("omron_test"), "config", "test_parameters.yaml"])
-  bagname = f"motion_{datetime.datetime.today().year}_{datetime.datetime.today().month}_{datetime.datetime.today().day}_{datetime.datetime.today().hour}_{datetime.datetime.today().minute}_{datetime.datetime.today().second}"
-  bagpath = os.path.join(os.environ["HOME"],"projects","bags",bagname)
+#  bagname = f"motion_{datetime.datetime.today().year}_{datetime.datetime.today().month}_{datetime.datetime.today().day}_{datetime.datetime.today().hour}_{datetime.datetime.today().minute}_{datetime.datetime.today().second}"
+  bagpath = os.path.join(os.environ["HOME"],"projects","bags")
 
   motion_node = Node(
     package="omron_test",
@@ -34,13 +34,21 @@ def generate_launch_description():
     parameters=[config]
   )
 
-  rosbag_record = ExecuteProcess(
-      condition=IfCondition(
-        PythonExpression([save_bags])
-      ),
-      cmd=['ros2', 'bag', 'record', '-a', '-o', bagpath],
-      output='log',
+  rosbag_record = Node(
+    package="omron_test",
+    executable="omron_test_bag_node",
+    name="omron_test_bag_node",
+    output="screen",
+    parameters=[config, {"bag_path": bagpath}]
   )
+
+  # rosbag_record = ExecuteProcess(
+  #     condition=IfCondition(
+  #       PythonExpression([save_bags])
+  #     ),
+  #     cmd=['ros2', 'bag', 'record', '-a', '-o', bagpath],
+  #     output='log',
+  # )
 
   close_bag = RegisterEventHandler(
     OnProcessExit(
@@ -56,15 +64,16 @@ def generate_launch_description():
   ######################################
   launch_include = IncludeLaunchDescription(
       PythonLaunchDescriptionSource(
-          PathJoinSubstitution(
+          PathJoinSubstitution([
               FindPackageShare('omron_test'),
               'launch',
-              'return.launch.py'))
+              'return.launch.py']))
   )
 
   to_launch = [save_bags_arg,
                motion_node,
                rosbag_record,
-               close_bag]
+               close_bag,
+               launch_include]
 
   return LaunchDescription(to_launch)

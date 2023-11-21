@@ -2,6 +2,7 @@ omron_test_node:
   ros__parameters:
     use_close_loop: true
     cmd_vel_topic: "/cmd_vel"
+    pose_topic: "/status/pose"
     max_vel_in_m: 0.5 # m/s
     max_acc_in_m: 1.0 # m/s^2
     max_rot_vel_in_deg: 30.0 # deg/s
@@ -11,9 +12,13 @@ omron_test_node:
       max_acc_in_m: [0.2, 0.4]
       max_rot_vel_in_deg: [10.0]
       max_rot_acc_in_deg: [100.0]
-    update_period_in_ms: 10 #50 # ms
+    update_period_in_ms: 50 # ms
 
-    movements: [0]
-    values:    [2.0]
+    movements: [0, 1]
+    values:    [2.0, 180.0]
 
-    alpha: 0.1
+omron_test_bag_node:
+  ros__parameters:
+    cmd_vel_topic: "/cmd_vel"
+    state_pose_topic: "/status/pose"
+    state_vel_topic: "/status/velocity"

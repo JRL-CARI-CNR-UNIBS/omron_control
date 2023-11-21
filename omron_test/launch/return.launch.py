@@ -28,7 +28,7 @@ def generate_launch_description():
   )
   enable_nav = LaunchConfiguration('enable_nav')
 
-  log_level = "debug"
+  log_level = "warn"
 
   lifecycle_nodes = ['controller_server',
                     'smoother_server',
@@ -37,11 +37,11 @@ def generate_launch_description():
                     'bt_navigator',
                     'waypoint_follower']
   
-  nav_base_params = PathJoinSubstitution(
+  nav_base_params = PathJoinSubstitution([
     FindPackageShare('omron_test'),
     'config',
     "nav_params.yaml"
-    )
+    ])
   nav_params = RewrittenYaml(
     source_file=nav_base_params,
     root_key="omron",

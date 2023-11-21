@@ -78,6 +78,7 @@ def generate_launch_description():
             executable='omron_ros2_agv_node',
             namespace='omron',
             remappings= [('/omron/map', '/map'),('/omron/map_metadata','/map_metadata')],
+            arguments=['--ros-args', '--log-level', 'warn'],
             output='screen')
 
     pcl_to_ls =    Node(
@@ -97,6 +98,7 @@ def generate_launch_description():
                 'use_inf': False,
                 'inf_epsilon': 1.0
             }],
+            arguments=['--ros-args', '--log-level', 'warn'],
             name='pointcloud_to_laserscan'
         )
 
@@ -110,7 +112,7 @@ def generate_launch_description():
                 'msgs_per_sec': 2.0,
                 'output_topic': 'scan_rviz'
             }],
-            arguments=['messages scan 2 scan_rviz'],
+            arguments=['messages scan 2 scan_rviz', '--ros-args', '--log-level', 'warn'],
             output='screen')
 
     nodes = [

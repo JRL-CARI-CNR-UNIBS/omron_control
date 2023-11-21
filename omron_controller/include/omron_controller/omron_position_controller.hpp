@@ -13,6 +13,11 @@
 
 #include "omron_position_controller_parameters.hpp"
 
+/*
+ * Implements "Tracking of a Reference Vehicle with the Same Kinematics" controller
+ * from Springer Handbook of Robotics, pp. 1242-1243
+ */
+
 namespace omron {
 class OmronPositionController : public controller_interface::ChainableControllerInterface
 {
@@ -66,7 +71,7 @@ private:
     std::string ref_pos;
   } m_topics;
 
-  std::vector<double> m_kp = {0.0, 0.0};
+  double m_k1, m_k2, m_k3;
 };
 }
 

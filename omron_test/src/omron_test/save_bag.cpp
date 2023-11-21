@@ -49,6 +49,7 @@ public:
     m_path_bags =   this->get_parameter("bag_path").as_string();
     m_bag_writer = std::make_unique<rosbag2_cpp::Writer>();
     m_timestamp = this->get_clock()->now().nanoseconds();
+    m_bag_writer->open(m_path_bags + "/test_move_" + std::to_string(m_timestamp) + "__" + std::to_string(m_test_number));
   }
   ~BagWriter()
   {

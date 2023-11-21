@@ -75,27 +75,27 @@ target_compile_definitions(omron_velocity_controller PUBLIC "PLUGINLIB__DISABLE_
 ## Position Controller ##
 #########################
 
-add_library(omron_position_controller SHARED
-  include/${PROJECT_NAME}/omron_position_controller.hpp
-  src/${PROJECT_NAME}/omron_position_controller.cpp
-  )
+#add_library(omron_position_controller SHARED
+#  include/${PROJECT_NAME}/omron_position_controller.hpp
+#  src/${PROJECT_NAME}/omron_position_controller.cpp
+#  )
 
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  target_compile_definitions(omron_position_controller PRIVATE DEBUG_ON)
-endif()
+#if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
+#  target_compile_definitions(omron_position_controller PRIVATE DEBUG_ON)
+#endif()
 
-target_include_directories(omron_position_controller PUBLIC
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-  )
+#target_include_directories(omron_position_controller PUBLIC
+#  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+#  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+#  )
 
-ament_target_dependencies(omron_position_controller
-  ${PACKAGES_REQUIRED_HERE}
-  )
-target_link_libraries(omron_position_controller
-  omron_position_controller_parameters)
+#ament_target_dependencies(omron_position_controller
+#  ${PACKAGES_REQUIRED_HERE}
+#  )
+#target_link_libraries(omron_position_controller
+#  omron_position_controller_parameters)
 
-target_compile_definitions(omron_position_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+#target_compile_definitions(omron_position_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 
 ## Export Plugin ##
@@ -114,14 +114,14 @@ install(
   LIBRARY DESTINATION lib/${PROJECT_NAME}
   )
 
-install(
-  TARGETS omron_position_controller
-          omron_position_controller_parameters
-  EXPORT export_omron_position_controller
-  RUNTIME DESTINATION bin/${PROJECT_NAME}
-  ARCHIVE DESTINATION lib/${PROJECT_NAME}
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
-  )
+#install(
+#  TARGETS omron_position_controller
+#          omron_position_controller_parameters
+#  EXPORT export_omron_position_controller
+#  RUNTIME DESTINATION bin/${PROJECT_NAME}
+#  ARCHIVE DESTINATION lib/${PROJECT_NAME}
+#  LIBRARY DESTINATION lib/${PROJECT_NAME}
+#  )
 
 install(
   DIRECTORY include
@@ -144,7 +144,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_targets(export_omron_velocity_controller
-                     export_omron_position_controller
+#                     export_omron_position_controller
                      HAS_LIBRARY_TARGET)
 ament_export_dependencies(${PACKAGES_REQUIRED_HERE})
 

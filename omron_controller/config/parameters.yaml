@@ -9,7 +9,7 @@ omron_velocity_controller:
   ros__parameters:
     feedback:
       use_open_loop: true
-      kp: 1.0
+      kp: 0.0
     cmd_vel_topic: "cmd_vel"
     tf:
       use_tf: true

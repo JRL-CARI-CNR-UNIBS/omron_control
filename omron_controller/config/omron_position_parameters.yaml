@@ -16,10 +16,20 @@ omron_position_controller:
     }
   }
   feedback:
-    kp: {
-      type: double_array,
-      default_value: [0.0, 0.0],
-      description: "P-gain, linear and angular"
+    k1: {
+      type: double,
+      default_value: 0.0,
+      description: "k1 gain of the controller. pp 1242-1243 Springer handbook of Robotics"
+    }
+    k2: {
+      type: double,
+      default_value: 0.0,
+      description: "k2 gain of the controller"
+    }
+    k3: {
+      type: double,
+      default_value: 0.0,
+      description: "k3 gain of the controller"
     }
 #  tf:
 #    use_tf: {

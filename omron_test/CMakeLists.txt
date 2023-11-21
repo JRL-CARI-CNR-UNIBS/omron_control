@@ -14,8 +14,13 @@ set(CMAKE_BUILD_TYPE Debug)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 ###############
 ## Test Node ##
@@ -23,11 +28,16 @@ find_package(rosbag2_cpp REQUIRED)
 add_executable(omron_test_node src/omron_test/test_move.cpp)
 ament_target_dependencies(omron_test_node
   rclcpp
+  rclcpp_action
   geometry_msgs
-  rosbag2_cpp
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  nav2_msgs
   )
 install(TARGETS omron_test_node
     DESTINATION lib/${PROJECT_NAME})
+
 
 ##############
 ## Bag Node ##
