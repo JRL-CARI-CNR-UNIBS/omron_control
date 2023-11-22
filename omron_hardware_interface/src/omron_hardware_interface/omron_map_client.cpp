@@ -1,11 +1,11 @@
 #include <omron_hardware_interface/omron_map_client.hpp>
 
-OmronMapClient::OmronMapClient(const std::shared_ptr<ArClientBase> t_client)
+OmronMapClient::OmronMapClient(ArClientBase* t_client)
   : rclcpp::Node("omron_map_client"),
-    get_map_name__cb(this, &OmronMapClient::handle_get_map_name),
-    get_map__cb(this, &OmronMapClient::handle_get_map),
-    m_client(t_client)
+    m_get_map_name__ftor(this, &OmronMapClient::handle_get_map_name),
+    m_get_map__ftor(this, &OmronMapClient::handle_get_map)
 {
+  m_client = t_client;
   init();
 }
 
@@ -14,8 +14,8 @@ void OmronMapClient::init()
   m_metadata__pub = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata",rclcpp::QoS(1).reliable().transient_local());
   m_map__pub = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map",rclcpp::QoS(1).reliable().transient_local());
 
-  m_client->addHandler("getMap", &get_map__cb);
-  m_client->addHandler("getMapName", &get_map_name__cb);
+  m_client->addHandler("getMap", &m_get_map__ftor);
+  m_client->addHandler("getMapName", &m_get_map_name__ftor);
   m_client->requestOnce("getMapName");
   m_start.setToNow();
   m_client->requestOnce("getMap");
@@ -23,6 +23,10 @@ void OmronMapClient::init()
   while(!mapped){
     sleep(1);
   }
+
+  m_metadata__pub->publish(m_meta_data_message);
+  m_map__pub->publish(m_map_resp);
+  RCLCPP_INFO(this->get_logger(), "Map sent");
 }
 
 void OmronMapClient::handle_get_map_name(ArNetPacket *packet)
@@ -102,7 +106,7 @@ void OmronMapClient::handle_get_map(ArNetPacket *packet)
       //printf("Point at Coord %d of %d\n", coord, gridX*gridY);
       m_map_resp.data[coord] = 100;
     }
-
+    printf("Map retrieved");
     mapped = 1;
 
   }

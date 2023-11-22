@@ -12,10 +12,10 @@
 class OmronMapClient : public rclcpp::Node
 {
 public:
-  OmronMapClient(const std::shared_ptr<ArClientBase> t_client);
+  OmronMapClient(ArClientBase* t_client);
   void init();
 //  void run();
-  static void init_and_run(const std::shared_ptr<ArClientBase> t_client);
+  static void init_and_run(ArClientBase* t_client);
 private:
 //  OmronMapClient(std::string node_name, ArClientBase *client);
 
@@ -25,10 +25,10 @@ private:
 
 
 //  ArClientBase *myClient;
-  std::shared_ptr<ArClientBase> m_client;
+  ArClientBase* m_client;
 
-  ArFunctor1C<OmronMapClient, ArNetPacket *> get_map_name__cb;
-  ArFunctor1C<OmronMapClient, ArNetPacket *> get_map__cb;
+  ArFunctor1C<OmronMapClient, ArNetPacket *> m_get_map_name__ftor;
+  ArFunctor1C<OmronMapClient, ArNetPacket *> m_get_map__ftor;
 
   ArMap m_ar_map;
   ArTime m_start;

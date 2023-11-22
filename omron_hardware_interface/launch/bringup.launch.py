@@ -73,17 +73,24 @@ def generate_launch_description():
     ### Other nodes ###
     ###################
 
+#    map_and_laser_node = Node(
+#            package='omron_ros2_agv',
+#            executable='omron_ros2_agv_node',
+#            namespace='omron',
+#            remappings= [('/omron/map', '/map'),('/omron/map_metadata','/map_metadata')],
+#            arguments=['--ros-args', '--log-level', 'info'],
+#            output='screen')
     map_and_laser_node = Node(
-            package='omron_ros2_agv',
-            executable='omron_ros2_agv_node',
-            namespace='omron',
-            remappings= [('/omron/map', '/map'),('/omron/map_metadata','/map_metadata')],
-            arguments=['--ros-args', '--log-level', 'warn'],
-            output='screen')
+      package='omron_hardware_interface',
+      executable='omron_aria_map_and_laser_client',
+      arguments=['--ros-args', '--log-level', 'warn'],
+      output='screen'
+    )
 
     pcl_to_ls =    Node(
-            package='pointcloud_to_laserscan', executable='pointcloud_to_laserscan_node',
-            remappings={('cloud_in', 'omron/cloud_in'),('scan', 'omron/scan')},
+            package='pointcloud_to_laserscan',
+            executable='pointcloud_to_laserscan_node',
+#            remappings={('cloud_in', 'omron/cloud_in'),('scan', 'omron/scan')},
             parameters=[{
                 'target_frame': 'base_link',
                 'transform_tolerance': 0.01,
