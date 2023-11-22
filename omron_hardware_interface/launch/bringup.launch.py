@@ -61,7 +61,7 @@ def generate_launch_description():
       executable="spawner",
       output="screen",
 #      parameters=[robot_description, controller_parameters]
-      arguments=["omron_velocity_controller"]
+      arguments=["omron_forward_controller"]
     )
 
     delay_controller_after_manager = TimerAction(
