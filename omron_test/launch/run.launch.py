@@ -67,7 +67,7 @@ def generate_launch_description():
           PathJoinSubstitution([
               FindPackageShare('omron_test'),
               'launch',
-              'return.launch.py']))
+              'nav.launch.py']))
   )
 
   to_launch = [save_bags_arg,
