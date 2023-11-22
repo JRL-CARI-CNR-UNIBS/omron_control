@@ -1,5 +1,5 @@
-#ifndef OMRON_VELOCITY_CONTROLLER_HPP
-#define OMRON_VELOCITY_CONTROLLER_HPP
+#ifndef OMRON_FORWARD_CONTROLLER_HPP
+#define OMRON_FORWARD_CONTROLLER_HPP
 
 #include <controller_interface/chainable_controller_interface.hpp>
 #include <realtime_tools/realtime_buffer.h>
@@ -72,4 +72,4 @@ private:
 };
 }
 
-#endif // OMRON_VELOCITY_CONTROLLER_HPP
+#endif // OMRON_FORWARD_CONTROLLER_HPP

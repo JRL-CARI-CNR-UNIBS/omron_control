@@ -1,4 +1,4 @@
-#include "omron_controller/omron_position_controller.hpp"
+#include "omron_controller/omron_trajectory_controller.hpp"
 
 #include "controller_interface/helpers.hpp"
 

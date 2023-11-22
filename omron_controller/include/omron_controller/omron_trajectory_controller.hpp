@@ -11,7 +11,7 @@
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 
-#include "omron_position_controller_parameters.hpp"
+#include "omron_trajectory_controller_parameters.hpp"
 
 /*
  * Implements "Tracking of a Reference Vehicle with the Same Kinematics" controller

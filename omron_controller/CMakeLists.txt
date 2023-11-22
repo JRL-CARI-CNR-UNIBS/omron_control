@@ -40,10 +40,10 @@ set(ADD_HPP_FILE # only for IDE visualization
 )
 
 generate_parameter_library(omron_forward_controller_parameters
-  config/omron_controller_parameters.yaml
+  config/required_parameters__omron_forward_controller.yaml
 )
-generate_parameter_library(omron_position_controller_parameters
-  config/omron_position_parameters.yaml
+generate_parameter_library(omron_trajectory_controller_parameters
+  config/required_parameters__omron_trajectory_controller.yaml
 )
 
 #########################
