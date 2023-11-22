@@ -235,6 +235,7 @@ namespace omron {
       tf_msg.header.frame_id = m_params.tf.odom; //m_params.tf.from;
       tf_msg.child_frame_id = m_params.tf.to;
       tf_msg.transform.translation.x = pose_msg.pose.position.x;
+      tf_msg.transform.translation.y = pose_msg.pose.position.y;
       tf_msg.transform.rotation.z = pose_msg.pose.orientation.z;
       tf_msg.transform.rotation.w = pose_msg.pose.orientation.w;
       m_tf__broad->sendTransform(tf_msg);
