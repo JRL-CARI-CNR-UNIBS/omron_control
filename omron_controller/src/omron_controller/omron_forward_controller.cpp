@@ -209,7 +209,7 @@ namespace omron {
     pose_msg.header.stamp = twist_msg.header.stamp;
     pose_msg.pose.position.x = state_interfaces_.at(2).get_value();
     pose_msg.pose.position.y = state_interfaces_.at(3).get_value();
-    tf2::Quaternion quat({0.0,0.0,1.0},state_interfaces_.at(4).get_value());
+    tf2::Quaternion quat({0.0,0.0,1.0},state_interfaces_.at(4).get_value() * M_PI/180.0);
 //    pose_msg.pose.orientation.z = std::sin(state_interfaces_.at(4).get_value()/2.0);
 //    pose_msg.pose.orientation.w = std::cos(state_interfaces_.at(4).get_value()/2.0);
     pose_msg.pose.orientation = tf2::toMsg(quat);
