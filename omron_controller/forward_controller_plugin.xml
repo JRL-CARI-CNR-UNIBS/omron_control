@@ -1,4 +1,4 @@
-<library path="omron_velocity_controller">
+<library path="omron_forward_controller">
   <class name="omron/OmronController"
          type="omron::OmronController"
          base_class_type="controller_interface::ChainableControllerInterface">

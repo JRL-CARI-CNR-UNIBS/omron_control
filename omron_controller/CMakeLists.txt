@@ -32,14 +32,14 @@ foreach(package IN ITEMS ${PACKAGES_REQUIRED_HERE})
 endforeach()
 
 set(ADD_CPP_FILE
-  src/${PROJECT_NAME}/omron_velocity_controller.cpp
+  src/${PROJECT_NAME}/omron_forward_controller.cpp
 )
 
 set(ADD_HPP_FILE # only for IDE visualization
-  include/${PROJECT_NAME}/omron_velocity_controller.hpp
+  include/${PROJECT_NAME}/omron_forward_controller.hpp
 )
 
-generate_parameter_library(omron_velocity_controller_parameters
+generate_parameter_library(omron_forward_controller_parameters
   config/omron_controller_parameters.yaml
 )
 generate_parameter_library(omron_position_controller_parameters
@@ -47,29 +47,29 @@ generate_parameter_library(omron_position_controller_parameters
 )
 
 #########################
-## Velocity Controller ##
+## Forward Controller ##
 #########################
 
-add_library(omron_velocity_controller SHARED
+add_library(omron_forward_controller SHARED
   ${ADD_HPP_FILE}
   ${ADD_CPP_FILE})
 
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  target_compile_definitions(omron_velocity_controller PRIVATE DEBUG_ON)
+  target_compile_definitions(omron_forward_controller PRIVATE DEBUG_ON)
 endif()
 
-target_include_directories(omron_velocity_controller PUBLIC
+target_include_directories(omron_forward_controller PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
   )
 
-ament_target_dependencies(omron_velocity_controller
+ament_target_dependencies(omron_forward_controller
   ${PACKAGES_REQUIRED_HERE}
   )
-target_link_libraries(omron_velocity_controller
-  omron_velocity_controller_parameters)
+target_link_libraries(omron_forward_controller
+  omron_forward_controller_parameters)
 
-target_compile_definitions(omron_velocity_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+target_compile_definitions(omron_forward_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 #########################
 ## Position Controller ##
@@ -99,16 +99,16 @@ target_compile_definitions(omron_velocity_controller PUBLIC "PLUGINLIB__DISABLE_
 
 
 ## Export Plugin ##
-pluginlib_export_plugin_description_file(controller_interface velocity_controller_plugin.xml)
+pluginlib_export_plugin_description_file(controller_interface forward_controller_plugin.xml)
 
 
 #############
 ## INSTALL ##
 #############
 install(
-  TARGETS omron_velocity_controller
-          omron_velocity_controller_parameters
-  EXPORT export_omron_velocity_controller
+  TARGETS omron_forward_controller
+          omron_forward_controller_parameters
+  EXPORT export_omron_forward_controller
   RUNTIME DESTINATION bin/${PROJECT_NAME}
   ARCHIVE DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib/${PROJECT_NAME}
@@ -143,7 +143,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_export_targets(export_omron_velocity_controller
+ament_export_targets(export_omron_forward_controller
 #                     export_omron_position_controller
                      HAS_LIBRARY_TARGET)
 ament_export_dependencies(${PACKAGES_REQUIRED_HERE})
