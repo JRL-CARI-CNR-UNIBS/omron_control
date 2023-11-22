@@ -5,6 +5,7 @@
 #include <realtime_tools/realtime_buffer.h>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -56,6 +57,7 @@ private:
 
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_status_vel__pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr m_status_pose__pub;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom__pub;
 
   std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf__broad;
 
@@ -65,6 +67,7 @@ private:
 
   std::string status_twist_topic {"status/velocity"};
   std::string status_pose_topic {"status/pose"};
+  std::string odom_topic {"/odom"};
   std::string cmd_vel_topic;
 };
 }

@@ -71,6 +71,10 @@ namespace omron {
     m_status_pose__pub = this->get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(
                            status_pose_topic,
                            rclcpp::SystemDefaultsQoS());
+    m_odom__pub = this->get_node()->create_publisher<nav_msgs::msg::Odometry>(
+                    odom_topic,
+                    rclcpp::SystemDefaultsQoS()
+                    );
 
     m_tf__broad = std::make_unique<tf2_ros::TransformBroadcaster>(this->get_node());
 
@@ -214,6 +218,12 @@ namespace omron {
 //    pose_msg.pose.orientation.w = std::cos(state_interfaces_.at(4).get_value()/2.0);
     pose_msg.pose.orientation = tf2::toMsg(quat);
     m_status_pose__pub->publish(pose_msg);
+
+    nav_msgs::msg::Odometry odom_msg;
+    odom_msg.header = twist_msg.header;
+    odom_msg.pose.pose = pose_msg.pose;
+    odom_msg.twist.twist = twist_msg.twist;
+    m_odom__pub->publish(odom_msg);
 
     if(m_params.tf.use_tf)
     {
