@@ -281,13 +281,13 @@ void OmronAria::get_pose_status__cb(ArNetPacket *packet)
 void OmronAria::set_cmd_vel(const double& forward, const double& turn)
 {
   double fw = forward / m_max_vel.linear;
-  double tr = turn / m_max_vel.angular;
+  double tr = (turn*180.0/M_PI) / m_max_vel.angular;
   if(fabs(forward) > 0.001 || fabs(turn) > 0.001)
   {
     ArNetPacket packet;
     m_is_cmd_valid = true;
     packet.doubleToBuf(100 * fw);
-    packet.doubleToBuf((tr * 2)/0.0174);
+    packet.doubleToBuf(100 * tr);
     packet.doubleToBuf(100);
     packet.doubleToBuf(0.0);
     m_client.requestOnce("ratioDrive", &packet);

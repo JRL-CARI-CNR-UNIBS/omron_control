@@ -263,8 +263,8 @@ namespace omron {
     double reference[2];
     reference[0] = reference_interfaces_.at(0);
     reference[1] = reference_interfaces_.at(1);
-    reference[0] = std::fabs(reference[0]) > 0.01? reference[0] : 0.0; // m/s
-    reference[1] = std::fabs(reference[1]) > 0.01? reference[1] : 0.0; // deg/s
+//    reference[0] = std::fabs(reference[0]) > 0.01? reference[0] : 0.0; // m/s
+//    reference[1] = std::fabs(reference[1]) > 0.01? reference[1] : 0.0; // rad/s
     command_interfaces_.at(0).set_value(reference[0]);
     command_interfaces_.at(1).set_value(reference[1]);
 
