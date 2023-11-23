@@ -57,7 +57,7 @@ def generate_launch_description():
         output='screen',
         parameters=[nav_params],
         arguments=['--ros-args', '--log-level', log_level],
-        # remappings= [('cmd_vel', '/omron/cmd_vel')]
+        remappings= [('cmd_vel', '/omron/cmd_vel')]
         ),
     Node(
         package='nav2_smoother',

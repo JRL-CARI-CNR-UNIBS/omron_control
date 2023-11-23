@@ -3,10 +3,10 @@ bt_navigator:
     use_sim_time: False
     global_frame: map
     robot_base_frame: base_link
-    odom_topic: /odom
+    odom_topic: /omron/odom
     bt_loop_duration: 10
     default_server_timeout: 20
-    navigators: ["navigate_to_pose", "navigate_through_poses"]
+    navigators: ["navigate_to_pose", "navigate_through_poses"] # solo Iron??
     navigate_to_pose:
       plugin: "nav2_bt_navigator/NavigateToPoseNavigator"
     navigate_through_poses:
@@ -73,9 +73,10 @@ controller_server:
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
-    odom_topic: /odom
+    odom_topic: /omron/odom
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"] 
+    current_goal_checker: "general_goal_checker"
     controller_plugins: ["FollowPath"]
 
     # Progress checker parameters
@@ -164,7 +165,7 @@ local_costmap:
         observation_sources: scan
         scan:
           sensor_frame: base_link
-          topic: /cloud_in
+          topic: /omron/cloud_in
           obstacle_max_range: 4.5
           obstacle_min_range: 0.0
           raytrace_max_range: 4.0
@@ -198,7 +199,7 @@ global_costmap:
         observation_sources: scan
         scan:
           sensor_frame: map
-          topic: /cloud_in
+          topic: /omron/cloud_in
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -213,7 +214,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 1.0
-        inflation_radius: 1.2
+        inflation_radius: 0.8
       always_send_full_costmap: True
 
 

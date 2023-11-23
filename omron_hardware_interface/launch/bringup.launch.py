@@ -53,7 +53,8 @@ def generate_launch_description():
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[robot_description, controller_parameters],
-        output="both"
+        output="both",
+        remappings=[("/odom", "/omron/odom")],
     )
 
     spawn_controller = Node(
@@ -84,13 +85,14 @@ def generate_launch_description():
       package='omron_hardware_interface',
       executable='omron_aria_map_and_laser_client',
       arguments=['--ros-args', '--log-level', 'warn'],
+      remappings=[('cloud_in', 'omron/cloud_in')],
       output='screen'
     )
 
     pcl_to_ls =    Node(
             package='pointcloud_to_laserscan',
             executable='pointcloud_to_laserscan_node',
-#            remappings={('cloud_in', 'omron/cloud_in'),('scan', 'omron/scan')},
+            remappings={('cloud_in', 'omron/cloud_in'),('scan', 'omron/scan')},
             parameters=[{
                 'target_frame': 'base_link',
                 'transform_tolerance': 0.01,

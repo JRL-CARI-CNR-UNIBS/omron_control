@@ -18,6 +18,8 @@ def generate_launch_description():
 
   save_bags = LaunchConfiguration('save_bags')
 
+  ns = "omron"
+
   save_bags_arg = DeclareLaunchArgument(
      'save_bags',
      default_value="True",
@@ -30,6 +32,7 @@ def generate_launch_description():
   motion_node = Node(
     package="omron_test",
     executable="omron_test_node",
+    namespace=ns,
     output="screen",
     parameters=[config]
   )
@@ -38,6 +41,7 @@ def generate_launch_description():
     package="omron_test",
     executable="omron_test_bag_node",
     name="omron_test_bag_node",
+    namespace=ns,
     output="screen",
     parameters=[config, {"bag_path": bagpath}]
   )
