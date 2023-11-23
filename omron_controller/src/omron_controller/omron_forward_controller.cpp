@@ -57,10 +57,10 @@ namespace omron {
     cmd_vel_topic = m_params.cmd_vel_topic;
 
     // Publisher, subscribers, tf
-    m_cmd_vel__sub = this->get_node()->create_subscription<geometry_msgs::msg::TwistStamped>(
+    m_cmd_vel__sub = this->get_node()->create_subscription<geometry_msgs::msg::Twist>(
                        cmd_vel_topic,
                        rclcpp::SystemDefaultsQoS(),
-                       [this](const geometry_msgs::msg::TwistStamped::SharedPtr msg)
+                       [this](const geometry_msgs::msg::Twist::SharedPtr msg)
                        {
                           m_rt_buffer__ptr.writeFromNonRT(msg);
                        });
@@ -158,7 +158,7 @@ namespace omron {
 //      return controller_interface::CallbackReturn::ERROR;
 //    }
 
-    m_rt_buffer__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr>(nullptr);
+    m_rt_buffer__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::Twist::SharedPtr>(nullptr);
     RCLCPP_INFO(this->get_node()->get_logger(), "activate successful");
 
     std::fill(
@@ -176,7 +176,7 @@ namespace omron {
   OmronController::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
   {
     // reset command buffer
-    m_rt_buffer__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr>(nullptr);
+    m_rt_buffer__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::Twist::SharedPtr>(nullptr);
     return controller_interface::CallbackReturn::SUCCESS;
   }
 
@@ -188,10 +188,10 @@ namespace omron {
     }
     else
     {
-      m_cmd_vel__sub = this->get_node()->create_subscription<geometry_msgs::msg::TwistStamped>(
+      m_cmd_vel__sub = this->get_node()->create_subscription<geometry_msgs::msg::Twist>(
                          cmd_vel_topic,
                          rclcpp::SystemDefaultsQoS(),
-                         [this](const geometry_msgs::msg::TwistStamped::SharedPtr msg)
+                         [this](const geometry_msgs::msg::Twist::SharedPtr msg)
                          {
                             m_rt_buffer__ptr.writeFromNonRT(msg);
                          });
@@ -263,8 +263,8 @@ namespace omron {
     double reference[2];
     reference[0] = reference_interfaces_.at(0);
     reference[1] = reference_interfaces_.at(1);
-    reference[0] = std::fabs(reference[0]) > 0.1? reference[0] : 0.0; // m/s
-    reference[1] = std::fabs(reference[1]) > 1? reference[1] : 0.0; // deg/s
+    reference[0] = std::fabs(reference[0]) > 0.01? reference[0] : 0.0; // m/s
+    reference[1] = std::fabs(reference[1]) > 0.01? reference[1] : 0.0; // deg/s
     command_interfaces_.at(0).set_value(reference[0]);
     command_interfaces_.at(1).set_value(reference[1]);
 
@@ -287,13 +287,13 @@ namespace omron {
   controller_interface::return_type
   OmronController::update_reference_from_subscribers()
   {
-    geometry_msgs::msg::TwistStamped::SharedPtr* cmd_vel = m_rt_buffer__ptr.readFromRT();
+    geometry_msgs::msg::Twist::SharedPtr* cmd_vel = m_rt_buffer__ptr.readFromRT();
     if (!(!cmd_vel || !(*cmd_vel)))
     {
-      if(!std::isnan((*cmd_vel)->twist.linear.x) && !std::isnan((*cmd_vel)->twist.angular.z))
+      if(!std::isnan((*cmd_vel)->linear.x) && !std::isnan((*cmd_vel)->angular.z))
       {
-        reference_interfaces_.at(0) = (*cmd_vel)->twist.linear.x;
-        reference_interfaces_.at(1) = (*cmd_vel)->twist.angular.z;
+        reference_interfaces_.at(0) = (*cmd_vel)->linear.x;
+        reference_interfaces_.at(1) = (*cmd_vel)->angular.z;
       }
       else
       {

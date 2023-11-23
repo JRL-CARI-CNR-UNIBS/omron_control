@@ -4,6 +4,7 @@
 #include <controller_interface/chainable_controller_interface.hpp>
 #include <realtime_tools/realtime_buffer.h>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
@@ -52,8 +53,8 @@ private:
   bool m_use_open_loop;
   double m_kp;
 
-  realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr> m_rt_buffer__ptr;
-  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_cmd_vel__sub;
+  realtime_tools::RealtimeBuffer<geometry_msgs::msg::Twist::SharedPtr> m_rt_buffer__ptr;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr m_cmd_vel__sub;
 
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_status_vel__pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr m_status_pose__pub;
