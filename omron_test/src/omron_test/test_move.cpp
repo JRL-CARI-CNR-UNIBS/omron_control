@@ -7,6 +7,7 @@
 #include <eigen3/Eigen/Core>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <nav2_msgs/action/navigate_to_pose.hpp>
@@ -37,7 +38,7 @@ public:
 
     RCLCPP_WARN(get_logger(), "Creating TestNode");
     this->declare_parameter("cmd_vel_topic",       rclcpp::ParameterType::PARAMETER_STRING);
-    this->declare_parameter("pose_topic",          rclcpp::ParameterType::PARAMETER_STRING);
+//    this->declare_parameter("pose_topic",          rclcpp::ParameterType::PARAMETER_STRING);
     this->declare_parameter("movements",           rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY);
     this->declare_parameter("values",              rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY);
     this->declare_parameter("max_vel_in_m",        rclcpp::ParameterType::PARAMETER_DOUBLE);
@@ -50,14 +51,7 @@ public:
 
     // Publisher and subscription
     m_topics["cmd_vel"] = this->get_parameter("cmd_vel_topic").as_string();
-    m_cmd_vel__pub = this->create_publisher<geometry_msgs::msg::TwistStamped>(m_topics["cmd_vel"], 1);
-
-    m_topics["pose"] = this->get_parameter("pose_topic").as_string();
-//    m_pose__sub = this->create_subscription<geometry_msgs::msg::PoseStamped>(m_topics["pose"],
-//        1,
-//        [this](const geometry_msgs::msg::PoseStamped& msg){
-//      m_pose__msg = msg;
-//    });
+    m_cmd_vel__pub = this->create_publisher<geometry_msgs::msg::Twist>(m_topics["cmd_vel"], 1);
 
     m_tf_buffer = std::make_shared<tf2_ros::Buffer>(this->get_clock());
     m_tf_listener = std::make_shared<tf2_ros::TransformListener>(*m_tf_buffer);
@@ -72,8 +66,10 @@ public:
     m_values = this->get_parameter("values").as_double_array();
     m_max_vel =     this->get_parameter("max_vel_in_m").as_double();
     m_max_acc =     this->get_parameter("max_acc_in_m").as_double();
-    m_max_rot_vel = this->get_parameter("max_rot_vel_in_deg").as_double(); /* deg/s */
-    m_max_rot_acc = this->get_parameter("max_rot_acc_in_deg").as_double(); /* deg/s^2 */
+    double max_rot_vel_in_deg = this->get_parameter("max_rot_vel_in_deg").as_double(); /* deg/s */
+    double max_rot_acc_in_deg = this->get_parameter("max_rot_acc_in_deg").as_double(); /* deg/s^2 */
+    m_max_rot_vel = max_rot_vel_in_deg*M_PI/180.0;
+    m_max_rot_acc = max_rot_acc_in_deg*M_PI/180.0;
     m_dt_in_ns = std::chrono::nanoseconds(this->get_parameter("update_period_in_ms").as_int() * 1000000ul);
     m_dt = m_dt_in_ns.count()/1.0e9;
 
@@ -118,7 +114,11 @@ public:
   {
     if(!m_is_at_home)
     {
-      this->go_home();
+      if(!this->go_home())
+      {
+        RCLCPP_ERROR(this->get_logger(), "Closing...");
+        return;
+      }
     }
     RCLCPP_DEBUG(get_logger(), "Entering motion");
     const double t_la = m_max_vel/m_max_acc;
@@ -146,11 +146,11 @@ public:
       double t = 0.0;
 
       double qp = 0.0, q = 0.0;
-      geometry_msgs::msg::TwistStamped cmd_msg;
-      cmd_msg.twist.linear.x = 0.0;
-      cmd_msg.twist.linear.y = 0.0;
-      cmd_msg.twist.angular.x = 0.0;
-      cmd_msg.twist.angular.y = 0.0;
+      geometry_msgs::msg::Twist cmd_msg;
+      cmd_msg.linear.x = 0.0;
+      cmd_msg.linear.y = 0.0;
+      cmd_msg.angular.x = 0.0;
+      cmd_msg.angular.y = 0.0;
 
       rclcpp::Rate rate(m_dt_in_ns);
 
@@ -185,17 +185,16 @@ public:
 //        qp /= qp_max;
         if(m_move_type == MoveType::LINEAR)
         {
-          cmd_msg.twist.linear.x = qp;
-          cmd_msg.twist.angular.z = 0.0;
+          cmd_msg.linear.x = qp;
+          cmd_msg.angular.z = 0.0;
         }
         else
         {
-          cmd_msg.twist.linear.z = 0.0;
-          cmd_msg.twist.angular.z = qp;
+          cmd_msg.linear.x = 0.0;
+          cmd_msg.angular.z = qp;
         }
-        cmd_msg.header.stamp = this->get_clock()->now();
+//        cmd_msg.header.stamp = this->get_clock()->now();
         m_cmd_vel__pub->publish(cmd_msg);
-//        m_cmd_pos__pub->publish()
         rate.sleep();
       }
       std::chrono::time_point t_end = std::chrono::steady_clock::now();
@@ -231,7 +230,7 @@ protected:
 
   std::unordered_map<std::string, std::string> m_topics;
 
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_cmd_vel__pub;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cmd_vel__pub;
 //  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr m_pose__sub;
   tf2_ros::Buffer::SharedPtr m_tf_buffer;
   std::shared_ptr<tf2_ros::TransformListener> m_tf_listener;
@@ -239,9 +238,9 @@ protected:
   geometry_msgs::msg::PoseStamped m_home;
   bool m_is_home_set {false};
 
-//////////
-// Nav2 //
-////////////////////
+/*
+ * Nav2
+ */
 
 public:
   using Nav2Pose = nav2_msgs::action::NavigateToPose;
@@ -249,26 +248,27 @@ public:
   bool set_home()
   {
 //    rclcpp::sleep_for(500ms); // per aggiornare il messaggio
-    geometry_msgs::msg::TwistStamped start_msg;
-    start_msg.twist.linear.x = 0.0;
-    start_msg.twist.linear.y = 0.0;
-    start_msg.twist.linear.z = 0.0;
-    start_msg.twist.angular.x = 0.0;
-    start_msg.twist.angular.y = 0.0;
-    start_msg.twist.angular.z = 0.0;
+    geometry_msgs::msg::Twist start_msg;
+    start_msg.linear.x = 0.0;
+    start_msg.linear.y = 0.0;
+    start_msg.linear.z = 0.0;
+    start_msg.angular.x = 0.0;
+    start_msg.angular.y = 0.0;
+    start_msg.angular.z = 0.0;
     m_cmd_vel__pub->publish(start_msg);
 
     auto now = this->get_clock()->now();
-    std::chrono::seconds time_elapsed;
-    while(!m_tf_buffer->canTransform("base_link","odom", now) && time_elapsed < 10s)
-    {
-      this->get_clock()->sleep_for(500ms);
-    }
-    if(m_tf_buffer->canTransform("base_link","odom", now))
+//    std::chrono::seconds time_elapsed;
+//    while(!m_tf_buffer->canTransform("base_link","odom", now) && time_elapsed < 10s)
+//    {
+//      this->get_clock()->sleep_for(500ms);
+//    }
+    if(m_tf_buffer->canTransform("map", "base_link", now, 5s))
     {
 //      m_home = m_pose__msg;
-      geometry_msgs::msg::TransformStamped tf = m_tf_buffer->lookupTransform("base_link","odom",now);
-      m_home.header = tf.header;
+      geometry_msgs::msg::TransformStamped tf = m_tf_buffer->lookupTransform("map", "base_link", now, 5s);
+      m_home.header.frame_id = "map";
+      m_home.header.stamp = tf.header.stamp;
       m_home.pose.position.x = tf.transform.translation.x;
       m_home.pose.position.y = tf.transform.translation.y;
       m_home.pose.position.z = tf.transform.translation.z;
@@ -276,9 +276,22 @@ public:
       m_home.pose.orientation.y = tf.transform.rotation.y;
       m_home.pose.orientation.z = tf.transform.rotation.z;
       m_home.pose.orientation.w = tf.transform.rotation.w;
+
+      auto static_tf__bcast = tf2_ros::TransformBroadcaster(this);
+      tf.child_frame_id = "home";
+      static_tf__bcast.sendTransform(tf);
+
       m_is_home_set = true;
       m_is_at_home = true;
       RCLCPP_INFO(this->get_logger(), "Home set");
+      RCLCPP_DEBUG_STREAM(this->get_logger(), "from: " << tf.header.frame_id << "\n" <<
+                                              "x: " << m_home.pose.position.x << "\n" <<
+                                              "y: " << m_home.pose.position.y << "\n" <<
+                                              "z: " << m_home.pose.position.z << "\n" <<
+                                              "w: " << m_home.pose.orientation.w << "\n" <<
+                                              "x: " << m_home.pose.orientation.x << "\n" <<
+                                              "y: " << m_home.pose.orientation.y << "\n" <<
+                                              "z: " << m_home.pose.orientation.z);
       return true;
     }
     else
@@ -290,11 +303,13 @@ public:
 
   bool go_home()
   {
-    if (!this->m_client__action->wait_for_action_server(3s))
+    if (!this->m_client__action->wait_for_action_server(5s))
     {
       RCLCPP_ERROR(this->get_logger(), "Action server not available after waiting");
-      rclcpp::shutdown();
+      return false;
     }
+
+    RCLCPP_INFO(this->get_logger(), "Go home action called");
 
     auto send_goal_options = rclcpp_action::Client<Nav2Pose>::SendGoalOptions();
     send_goal_options.goal_response_callback =
@@ -309,8 +324,15 @@ public:
     goal_msg.pose.header.stamp = this->get_clock()->now();
 
     auto future_goal_handle = this->m_client__action->async_send_goal(goal_msg, send_goal_options);
-    rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_goal_handle);
-    RCLCPP_INFO(this->get_logger(), "Go home action called");
+
+    if(rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_goal_handle)
+        != rclcpp::FutureReturnCode::SUCCESS)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Action failed");
+    }
+    auto res__future = m_client__action->async_get_result(future_goal_handle.get());
+    rclcpp::spin_until_future_complete(this->get_node_base_interface(), res__future);
+    RCLCPP_INFO(this->get_logger(), "Go home action terminated");
     return true;
   }
 

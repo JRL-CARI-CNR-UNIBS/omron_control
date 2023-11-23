@@ -15,8 +15,8 @@ omron:
         max_rot_acc_in_deg: [100.0]
       update_period_in_ms: 50 # ms
 
-      movements: [0, 1]
-      values:    [2.0, 180.0]
+      movements: [0]
+      values:    [2.0]
 
   omron_test_bag_node:
     ros__parameters:

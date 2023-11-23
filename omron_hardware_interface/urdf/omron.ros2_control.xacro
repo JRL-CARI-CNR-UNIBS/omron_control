@@ -19,8 +19,8 @@
             <param name="ip_address">192.168.1.32</param>
             <param name="port">7272</param>
             <param name="user">admin</param>
-            <param name="max_linear_vel">0.5</param>
-            <param name="max_angular_vel">30.0</param>
+            <param name="max_linear_vel">0.5</param> <!-- m/s -->
+            <param name="max_angular_vel">30.0</param> <!-- rad/s -->
 <!--              <param name="password"></param>-->
           </hardware>
         </xacro:unless>

@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler
 from launch.actions import LogInfo
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, LaunchConfigurationEquals
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 
@@ -18,14 +18,14 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
-            "gui",
-            default_value="true",
+            "rviz",
+            default_value="false",
             description="Start RViz2 automatically with this launch file.",
         )
     )
 
     # Initialize Arguments
-    gui = LaunchConfiguration("gui")
+    gui = LaunchConfiguration("rviz")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -124,12 +124,22 @@ def generate_launch_description():
             arguments=['messages scan 2 scan_rviz', '--ros-args', '--log-level', 'warn'],
             output='screen')
 
+    ## RViz2
+    rviz_config = PathJoinSubstitution([FindPackageShare("omron_hardware_interface"), "rviz", "omron.rviz"])
+    rviz_node = Node(
+      condition=LaunchConfigurationEquals("rviz", "true"),
+      package='rviz2',
+      executable='rviz2',
+      arguments=['--display-config', rviz_config],
+    )
+
     nodes = [
         control_node,
         delay_controller_after_manager,
         map_and_laser_node,
         pcl_to_ls,
-        laser_throttle
+        laser_throttle,
+        rviz_node
     ]
 
     return LaunchDescription(declared_arguments + nodes)

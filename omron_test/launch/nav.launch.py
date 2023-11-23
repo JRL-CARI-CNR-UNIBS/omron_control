@@ -28,14 +28,13 @@ def generate_launch_description():
   )
   enable_nav = LaunchConfiguration('enable_nav')
 
-  log_level = "warn"
+  log_level = "info"
 
-  lifecycle_nodes = ['controller_server',
-                    'smoother_server',
-                    'planner_server',
-                    'behavior_server',
-                    'bt_navigator',
-                    'waypoint_follower']
+  lifecycle_nodes = ['/omron/smoother_server',
+                     '/omron/planner_server',
+                     '/omron/controller_server',
+                     '/omron/behavior_server',
+                     '/omron/bt_navigator']
   
   nav_base_params = PathJoinSubstitution([
     FindPackageShare('omron_test'),
@@ -91,14 +90,14 @@ def generate_launch_description():
         parameters=[nav_params],
         arguments=['--ros-args', '--log-level', log_level],
         ),
-    Node(
-        package='nav2_waypoint_follower',
-        executable='waypoint_follower',
-        name='waypoint_follower',
-        output='screen',
-        parameters=[nav_params],
-        arguments=['--ros-args', '--log-level', log_level],
-        ),
+#    Node(
+#        package='nav2_waypoint_follower',
+#        executable='waypoint_follower',
+#        name='waypoint_follower',
+#        output='screen',
+#        parameters=[nav_params],
+#        arguments=['--ros-args', '--log-level', log_level],
+#        ),
     # Node(
     #     package='nav2_velocity_smoother',
     #     executable='velocity_smoother',
@@ -117,6 +116,7 @@ def generate_launch_description():
         output='screen',
         arguments=['--ros-args', '--log-level', log_level],
         parameters=[{'autostart': True},
+                    {'bond_timeout': 0.0},
                     {'node_names': lifecycle_nodes}]),
   ])
 
