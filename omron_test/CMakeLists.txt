@@ -21,6 +21,7 @@ find_package(rosbag2_cpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(omron_msgs REQUIRED)
 
 ###############
 ## Test Node ##
@@ -34,6 +35,7 @@ ament_target_dependencies(omron_test_node
   tf2_ros
   tf2_geometry_msgs
   nav2_msgs
+  omron_msgs
   )
 install(TARGETS omron_test_node
     DESTINATION lib/${PROJECT_NAME})

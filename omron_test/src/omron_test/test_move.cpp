@@ -1,3 +1,5 @@
+#include "omron_msgs/srv/goto_goal.hpp"
+
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rclcpp/executors.hpp>
@@ -114,7 +116,7 @@ public:
   {
     if(!m_is_at_home)
     {
-      if(!this->go_home())
+      if(!this->go_home__aria())
       {
         RCLCPP_ERROR(this->get_logger(), "Closing...");
         return;
@@ -208,6 +210,11 @@ public:
     }
     RCLCPP_INFO(get_logger(), "All movements completed.");
     m_is_at_home = false;
+
+    if(!m_is_at_home)
+    {
+      this->go_home__aria();
+    }
   }
 
 protected:
@@ -336,9 +343,31 @@ public:
     return true;
   }
 
+  bool go_home__aria()
+  {
+    RCLCPP_INFO(get_logger(), "Requesting goto goal - 1");
+    m_goal__clnt = this->create_client<omron_msgs::srv::GotoGoal>("/goto_goal");
+    std::string aria_goal = "Home";
+    omron_msgs::srv::GotoGoal::Request::SharedPtr goal = std::make_shared<omron_msgs::srv::GotoGoal::Request>();
+    goal->goal = aria_goal;
+
+    RCLCPP_INFO(get_logger(), "Requesting goto goal - 2");
+    auto goal_res__future = m_goal__clnt->async_send_request(goal);
+//    goal_res__future.wait();
+    rclcpp::spin_until_future_complete(this->get_node_base_interface(), goal_res__future);
+    if(goal_res__future.get()->result == omron_msgs::srv::GotoGoal::Response::FAILED)
+    {
+      RCLCPP_FATAL(this->get_logger(), "Cannot return home. Stopping...");
+//      throw std::runtime_error("Aria navigation failed");
+      return false;
+    }
+    return true;
+  }
+
   bool is_at_home(){return m_is_at_home;}
 
 protected:
+  rclcpp::Client<omron_msgs::srv::GotoGoal>::SharedPtr m_goal__clnt;
   rclcpp_action::Client<Nav2Pose>::SharedPtr m_client__action;
   void goal_result__cb(const GoalHandleNav2Pose::SharedPtr& goal_handle)
   {
@@ -370,11 +399,7 @@ int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<TestNode>();
-  node->go_home();
-  while(!node->is_at_home())
-  {
-    rclcpp::sleep_for(500ms);
-  }
+//  rclcpp::spin_some(node);
   rclcpp::sleep_for(1s);
   RCLCPP_WARN(rclcpp::get_logger("motion_test"), "Shutting down");
   rclcpp::shutdown();
