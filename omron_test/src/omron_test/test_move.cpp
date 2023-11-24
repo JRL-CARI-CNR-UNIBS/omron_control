@@ -263,13 +263,9 @@ public:
     start_msg.angular.y = 0.0;
     start_msg.angular.z = 0.0;
     m_cmd_vel__pub->publish(start_msg);
+    this->get_clock()->sleep_for(1s);
 
     auto now = this->get_clock()->now();
-//    std::chrono::seconds time_elapsed;
-//    while(!m_tf_buffer->canTransform("base_link","odom", now) && time_elapsed < 10s)
-//    {
-//      this->get_clock()->sleep_for(500ms);
-//    }
     if(m_tf_buffer->canTransform("map", "base_link", now, 5s))
     {
 //      m_home = m_pose__msg;

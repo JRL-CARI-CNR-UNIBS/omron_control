@@ -78,6 +78,7 @@ def generate_launch_description():
                motion_node,
                rosbag_record,
                close_bag,
-               launch_include]
+               # launch_include
+               ]
 
   return LaunchDescription(to_launch)
