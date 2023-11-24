@@ -83,7 +83,7 @@ def generate_launch_description():
 #            output='screen')
     map_and_laser_node = Node(
       package='omron_hardware_interface',
-      executable='omron_aria_map_and_laser_client',
+      executable='omron_support_nodes',
       arguments=['--ros-args', '--log-level', 'warn'],
       remappings=[('cloud_in', 'omron/cloud_in')],
       output='screen'

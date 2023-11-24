@@ -1,5 +1,6 @@
 #include "omron_hardware_interface/omron_map_client.hpp"
 #include "omron_hardware_interface/omron_laser_client.hpp"
+#include "omron_hardware_interface/omron_goto_goal_client.hpp"
 
 #include <Aria/Aria.h>
 #include <ArNetworking/ArNetworking.h>
@@ -50,11 +51,13 @@ int main(int argc, char** argv)
   std::cout << "Connected to server.\n";
   rclcpp::executors::MultiThreadedExecutor exec;
 
-  auto map_node = std::make_shared<OmronMapClient>(&ar_client);
-  auto laser_node = std::make_shared<OmronLaserClient>(&ar_client, "Laser_1Current", "cloud_in");
+  rclcpp::Node::SharedPtr map_node = std::make_shared<OmronMapClient>(&ar_client);
+  rclcpp::Node::SharedPtr laser_node = std::make_shared<OmronLaserClient>(&ar_client, "Laser_1Current", "cloud_in");
+  rclcpp::Node::SharedPtr goal_node = std::make_shared<OmronGotoGoalClient>(&ar_client);
 
   exec.add_node(map_node);
   exec.add_node(laser_node);
+  exec.add_node(goal_node);
 
   exec.spin();
 

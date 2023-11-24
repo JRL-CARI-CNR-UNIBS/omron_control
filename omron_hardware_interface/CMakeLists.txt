@@ -21,15 +21,16 @@ set(PACKAGES_REQUIRED_HERE
   pluginlib
 )
 
-set(MAP_AND_LASER_REQUIRED
+set(SUPPORT_NODES_REQUIRED
   nav_msgs
-  sensor_msgs)
+  sensor_msgs
+  omron_msgs)
 
 foreach(package IN ITEMS ${PACKAGES_REQUIRED_HERE})
   find_package(${package} REQUIRED)
 endforeach()
 
-foreach(package IN ITEMS ${MAP_AND_LASER_REQUIRED})
+foreach(package IN ITEMS ${SUPPORT_NODES_REQUIRED})
   find_package(${package} REQUIRED)
 endforeach()
 
@@ -76,29 +77,31 @@ pluginlib_export_plugin_description_file(hardware_interface plugin.xml)
 ## Map and Laser ##
 ###################
 
-add_executable(omron_aria_map_and_laser_client
-  src/map_and_laser_node.cpp
+add_executable(omron_support_nodes
+  src/support_nodes.cpp
   src/${PROJECT_NAME}/omron_map_client.cpp
   src/${PROJECT_NAME}/omron_laser_client.cpp
+  src/${PROJECT_NAME}/omron_goto_goal_client.cpp
   # Only for IDE
   include/${PROJECT_NAME}/omron_map_client.hpp
   include/${PROJECT_NAME}/omron_laser_client.hpp
+  include/${PROJECT_NAME}/omron_goto_goal_client.hpp
   )
-ament_target_dependencies(omron_aria_map_and_laser_client
-  ${MAP_AND_LASER_REQUIRED}
+ament_target_dependencies(omron_support_nodes
+  ${SUPPORT_NODES_REQUIRED}
   )
-target_link_libraries(omron_aria_map_and_laser_client
+target_link_libraries(omron_support_nodes
   omron_aria_hw_interface
   Aria
   ArNetworking
   )
-target_include_directories(omron_aria_map_and_laser_client PUBLIC
+target_include_directories(omron_support_nodes PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
   /usr/local/include/Aria/
   /usr/local/include/ArNetworking/)
 
-install(TARGETS omron_aria_map_and_laser_client
+install(TARGETS omron_support_nodes
   DESTINATION lib/${PROJECT_NAME})
 
 
