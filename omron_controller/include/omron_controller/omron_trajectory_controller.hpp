@@ -5,7 +5,8 @@
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "realtime_tools/realtime_buffer.h"
 #include "geometry_msgs/msg/twist_stamped.hpp"
-#include "std_msgs/msg/float64_multi_array.hpp"
+//#include "std_msgs/msg/float64_multi_array.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 
 #include "tf2_ros/buffer.h"
@@ -54,9 +55,9 @@ private:
   omron_position_controller::Params m_params;
 
   realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr> m_rt_buffer_vel__ptr;
-  realtime_tools::RealtimeBuffer<std_msgs::msg::Float64MultiArray::SharedPtr> m_rt_buffer_pos__ptr;
+  realtime_tools::RealtimeBuffer<geometry_msgs::msg::PoseStamped::SharedPtr> m_rt_buffer_pos__ptr;
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr m_ff_vel__sub;
-  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr m_ref_pos__sub;
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr m_ref_pos__sub;
 
   std::unique_ptr<tf2_ros::TransformListener> m_tf__listener;
   std::unique_ptr<tf2_ros::Buffer> m_tf__buffer;

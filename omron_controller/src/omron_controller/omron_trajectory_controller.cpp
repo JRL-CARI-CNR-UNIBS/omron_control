@@ -61,14 +61,14 @@ namespace omron {
     {
        m_rt_buffer_vel__ptr.writeFromNonRT(msg);
     });
-    m_ref_pos__sub = this->get_node()->create_subscription<std_msgs::msg::Float64MultiArray>(m_topics.ref_pos, 10, [this](const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+    m_ref_pos__sub = this->get_node()->create_subscription<geometry_msgs::msg::PoseStamped>(m_topics.ref_pos, 10, [this](const geometry_msgs::msg::PoseStamped::SharedPtr msg)
     {
        m_rt_buffer_pos__ptr.writeFromNonRT(msg);
     });
 
 
     m_tf__buffer = std::make_unique<tf2_ros::Buffer>(this->get_node()->get_clock());
-    m_tf__listener = std::make_unique<tf2_ros::TransformListener>(m_tf__buffer);
+    m_tf__listener = std::make_unique<tf2_ros::TransformListener>(*m_tf__buffer);
 
     // state interfaces
     std::vector<std::string> state_interface_names;
@@ -100,9 +100,9 @@ namespace omron {
     RCLCPP_INFO(this->get_node()->get_logger(), "configure successful");
 
     // Reference interfaces
-    if(m_params.interfaces.reference.command.size() != 2)
+    if(m_params.interfaces.reference.command.size() != 5)
     {
-      RCLCPP_ERROR(get_node()->get_logger(), "Reference names should be 2, given: %ld", m_params.interfaces.reference.command.size());
+      RCLCPP_ERROR(get_node()->get_logger(), "Reference names should be 5: x,y,theta,u_lin,u_ang. Given: %ld", m_params.interfaces.reference.command.size());
       return controller_interface::CallbackReturn::ERROR;
     }
     m_reference_interface_names = m_params.interfaces.reference.command;
@@ -131,14 +131,9 @@ namespace omron {
             m_command_interface_names.size(), ordered_interfaces.size());
       return controller_interface::CallbackReturn::ERROR;
     }
-//    if(m_reference_interface_names.size() != 2)
-//    {
-//      RCLCPP_ERROR(this->get_node()->get_logger(), "Expected 2 reference interfaces.");
-//      return controller_interface::CallbackReturn::ERROR;
-//    }
 
     m_rt_buffer_vel__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr>(nullptr);
-    m_rt_buffer_pos__ptr = realtime_tools::RealtimeBuffer<std_msgs::msg::Float64MultiArray::SharedPtr>(nullptr);
+    m_rt_buffer_pos__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::PoseStamped::SharedPtr>(nullptr);
 
     RCLCPP_INFO(this->get_node()->get_logger(), "activate successful");
 
@@ -158,7 +153,7 @@ namespace omron {
   {
     // reset command buffer
     m_rt_buffer_vel__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::TwistStamped::SharedPtr>(nullptr);
-    m_rt_buffer_pos__ptr = realtime_tools::RealtimeBuffer<std_msgs::msg::Float64MultiArray::SharedPtr>(nullptr);
+    m_rt_buffer_pos__ptr = realtime_tools::RealtimeBuffer<geometry_msgs::msg::PoseStamped::SharedPtr>(nullptr);
     return controller_interface::CallbackReturn::SUCCESS;
   }
 
@@ -178,10 +173,10 @@ namespace omron {
                          {
                             m_rt_buffer_vel__ptr.writeFromNonRT(msg);
                          });
-      m_ref_pos__sub = this->get_node()->create_subscription<std_msgs::msg::Float64MultiArray>(
+      m_ref_pos__sub = this->get_node()->create_subscription<geometry_msgs::msg::PoseStamped>(
                          m_topics.ref_pos,
                          rclcpp::SystemDefaultsQoS(),
-                         [this](const std_msgs::msg::Float64MultiArray::SharedPtr msg)
+                         [this](const geometry_msgs::msg::PoseStamped::SharedPtr msg)
                          {
                             m_rt_buffer_pos__ptr.writeFromNonRT(msg);
                          });
@@ -205,25 +200,29 @@ namespace omron {
   controller_interface::return_type
   OmronPositionController::update_reference_from_subscribers()
   {
+    // FIXME: TO CHANGE!
     geometry_msgs::msg::TwistStamped::SharedPtr* ff_vel = m_rt_buffer_vel__ptr.readFromRT();
-    std_msgs::msg::Float64MultiArray::SharedPtr* ref_pos = m_rt_buffer_pos__ptr.readFromRT();
+    geometry_msgs::msg::PoseStamped::SharedPtr* ref_pos = m_rt_buffer_pos__ptr.readFromRT();
 
-    if (!(!ff_vel || !(*ff_vel)))
+    if (!(!ref_pos || !(*ref_pos)))
     {
-      if(!std::isnan((*ff_vel)->twist.linear.x) && !std::isnan((*ff_vel)->twist.angular.z))
+      if(!std::isnan((*ref_pos)->pose.position.x)
+         && !std::isnan((*ref_pos)->pose.position.y)
+         && !std::isnan((*ref_pos)->pose.orientation.z))
       {
-        reference_interfaces_.at(0) = (*ref_pos)->data.at(0);
-        reference_interfaces_.at(1) = (*ref_pos)->data.at(1);
+        reference_interfaces_.at(0) = (*ref_pos)->pose.position.x;
+        reference_interfaces_.at(1) = (*ref_pos)->pose.position.y;
+        reference_interfaces_.at(2) = (*ref_pos)->pose.orientation.z;
       }
       else
       {
-        RCLCPP_ERROR_THROTTLE(this->get_node()->get_logger(), *(this->get_node()->get_clock()), 1000, "Float64MultiArray message is has NaN");
+        RCLCPP_ERROR_THROTTLE(this->get_node()->get_logger(), *(this->get_node()->get_clock()), 1000, "Message has NaN.");
         return controller_interface::return_type::ERROR;
       }
     }
     else
     {
-      RCLCPP_ERROR_THROTTLE(this->get_node()->get_logger(), *(this->get_node()->get_clock()), 1000, "Cannot receive Float64MultiArray message");
+      RCLCPP_ERROR_THROTTLE(this->get_node()->get_logger(), *(this->get_node()->get_clock()), 1000, "Cannot receive PoseStamped message");
       return controller_interface::return_type::ERROR;
     }
 
@@ -231,8 +230,8 @@ namespace omron {
     {
       if(!std::isnan((*ff_vel)->twist.linear.x) && !std::isnan((*ff_vel)->twist.angular.z))
       {
-        reference_interfaces_.at(2) = (*ff_vel)->twist.linear.x;
-        reference_interfaces_.at(3) = (*ff_vel)->twist.angular.z;
+        reference_interfaces_.at(3) = (*ff_vel)->twist.linear.x;
+        reference_interfaces_.at(4) = (*ff_vel)->twist.angular.z;
       }
       else
       {
@@ -252,20 +251,25 @@ namespace omron {
   controller_interface::return_type
   OmronPositionController::update_and_write_commands(const rclcpp::Time&, const rclcpp::Duration &)
   {
+    constexpr double margin {1e-3};
+    const double z1 = state_interfaces_.at(0).get_value() - reference_interfaces_.at(0);
+    const double z2 = state_interfaces_.at(1).get_value() - reference_interfaces_.at(1);
+    double th_e = (state_interfaces_.at(2).get_value() - reference_interfaces_.at(2));
+    double z3 = std::tan(th_e);
 
-//    m_tf__buffer->canTransform();
-    // Command
-    if(std::isnan(reference_interfaces_.at(0)) || std::isnan(reference_interfaces_.at(1)))
+    if(std::cos(th_e)< margin)
     {
-      RCLCPP_ERROR(this->get_node()->get_logger(), "NaN reference, stopping");
-      command_interfaces_.at(0).set_value(0.0);
-      command_interfaces_.at(1).set_value(0.0);
-      return controller_interface::return_type::ERROR;
+      th_e = (th_e)/std::abs(th_e) * M_PI/2.0 * 0.95;
+      z3 = std::tan(th_e);
     }
-    const double z1 =
-    command_interfaces_.at(0) = m_k1 *
-//    command_interfaces_.at(0) = m_kp[0] * (reference_interfaces_.at(0) - ) + (*ff_vel)->twist.linear.x;
-//    command_interfaces_.at(1) = m_kp[1] * (reference_interfaces_.at(1) - ) + (*ff_vel)->twist.angular.z;
+
+    command_interfaces_.at(0).set_value((reference_interfaces_.at(4) - m_k1 * std::fabs(reference_interfaces_.at(3))*(z1+z2*z3)) / std::cos(th_e));
+    command_interfaces_.at(1).set_value((-m_k2*state_interfaces_.at(4).get_value()*z2 - m_k3*std::fabs(state_interfaces_.at(3).get_value())*z3) * std::pow(std::cos(th_e),2) + reference_interfaces_.at(4));
+    if(command_interfaces_.at(0).get_value() == 0)
+    {
+      // TODO: usa altra tecnica di controllo.
+    }
+    return controller_interface::return_type::OK;
 
   }
 
