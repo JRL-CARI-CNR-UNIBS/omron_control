@@ -267,6 +267,7 @@ namespace omron {
     command_interfaces_.at(1).set_value((-m_k2*state_interfaces_.at(4).get_value()*z2 - m_k3*std::fabs(state_interfaces_.at(3).get_value())*z3) * std::pow(std::cos(th_e),2) + reference_interfaces_.at(4));
     if(command_interfaces_.at(0).get_value() == 0)
     {
+      RCLCPP_ERROR_THROTTLE(this->get_node()->get_logger(), *this->get_node()->get_clock(), 1000, "u_lin = 0. Another control technique should be used but is not implemented");
       // TODO: usa altra tecnica di controllo.
     }
     return controller_interface::return_type::OK;
