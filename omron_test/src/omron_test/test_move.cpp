@@ -5,6 +5,7 @@
 #include <rclcpp/executors.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <std_msgs/msg/int16.hpp>
 
 #include <eigen3/Eigen/Core>
 #include <tf2_ros/buffer.h>
@@ -48,12 +49,14 @@ public:
     this->declare_parameter("max_rot_vel_in_deg",  rclcpp::ParameterType::PARAMETER_DOUBLE);
     this->declare_parameter("max_rot_acc_in_deg",  rclcpp::ParameterType::PARAMETER_DOUBLE);
     this->declare_parameter("update_period_in_ms", rclcpp::ParameterType::PARAMETER_INTEGER);
+    this->declare_parameter("motion_law", rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY);
 
     this->declare_parameter("use_close_loop",      rclcpp::ParameterType::PARAMETER_BOOL);
 
     // Publisher and subscription
     m_topics["cmd_vel"] = this->get_parameter("cmd_vel_topic").as_string();
     m_cmd_vel__pub = this->create_publisher<geometry_msgs::msg::Twist>(m_topics["cmd_vel"], 1);
+    bag__pub = this->create_publisher<std_msgs::msg::Int16>("omron_test_number", 1);
 
     m_tf_buffer = std::make_shared<tf2_ros::Buffer>(this->get_clock());
     m_tf_listener = std::make_shared<tf2_ros::TransformListener>(*m_tf_buffer);
@@ -74,6 +77,15 @@ public:
     m_max_rot_acc = max_rot_acc_in_deg*M_PI/180.0;
     m_dt_in_ns = std::chrono::nanoseconds(this->get_parameter("update_period_in_ms").as_int() * 1000000ul);
     m_dt = m_dt_in_ns.count()/1.0e9;
+    motion_vel =     this->get_parameter("motion_law.max_vel_in_m").as_double_array();
+    motion_acc =     this->get_parameter("motion_law.max_acc_in_m").as_double_array();
+    motion_rot_vel = this->get_parameter("motion_law.max_rot_vel_in_deg").as_double_array(); /* deg/s */
+    motion_rot_acc = this->get_parameter("motion_law.max_rot_acc_in_deg").as_double_array(); /* deg/s^2 */
+    if (((motion_vel.size() == motion_acc.size()) && (motion_rot_vel.size() == motion_rot_acc.size()) && (motion_vel.size() == motion_rot_acc.size()))==false) {
+        RCLCPP_ERROR(get_logger(), "Motion law has different sizes. Ending...");
+        return;
+    }
+
 
     m_use_close_loop = this->get_parameter("use_close_loop").as_bool();
 
@@ -122,93 +134,108 @@ public:
         return;
       }
     }
-    RCLCPP_DEBUG(get_logger(), "Entering motion");
-    const double t_la = m_max_vel/m_max_acc;
-    const double t_ra = m_max_rot_vel/m_max_rot_acc;
-    for(size_t idx = 0; idx < m_movements.size(); ++idx)
-    {
-      RCLCPP_DEBUG_STREAM(get_logger(),
-                          "Movement: " << (m_move_type == MoveType::LINEAR? "Linear" : "Angular") << "\n"<<
-                          "Value: " << m_values.at(idx));
-      m_move_type = m_movements.at(idx);
-      double t_a, qp_max, qpp_max;
-      if(m_move_type == MoveType::LINEAR)
-      {
-        t_a =     t_la;
-        qp_max =  m_max_vel;
-        qpp_max = m_max_acc;
-      }
-      else
-      {
-        t_a =     t_ra;
-        qp_max =  m_max_rot_vel;
-        qpp_max = m_max_rot_acc;
-      }
-      double duration = m_values.at(idx)/qp_max+t_a;
-      double t = 0.0;
+    for(unsigned int n_idx = 0; n_idx < motion_vel.size(); ++n_idx){
+        RCLCPP_DEBUG_STREAM(get_logger(), "Entering motion number " << n_idx);
 
-      double qp = 0.0, q = 0.0;
-      geometry_msgs::msg::Twist cmd_msg;
-      cmd_msg.linear.x = 0.0;
-      cmd_msg.linear.y = 0.0;
-      cmd_msg.angular.x = 0.0;
-      cmd_msg.angular.y = 0.0;
+        // Publish bag
+        std_msgs::msg::Int16 bag_msg;
+        bag_msg.data = n_idx;
+        bag__pub->publish(bag_msg);
 
-      rclcpp::Rate rate(m_dt_in_ns);
+        const double m_max_vel=motion_vel.at(n_idx);
+        const double m_max_acc=motion_acc.at(n_idx);
+        const double m_max_rot_vel=motion_rot_vel.at(n_idx);
+        const double m_max_rot_acc=motion_rot_acc.at(n_idx);
 
-      RCLCPP_DEBUG(get_logger(),"Starting motion");
-      std::chrono::time_point t_start = std::chrono::steady_clock::now();
-      while(t < duration + duration/20)
-      {
-        rate.reset();
-        if(t < t_a)
+        const double t_la = m_max_vel/m_max_acc;
+        const double t_ra = m_max_rot_vel/m_max_rot_acc;
+        for(size_t idx = 0; idx < m_movements.size(); ++idx)
         {
-          qp = qpp_max * t;
-          q  = 0.5*qpp_max*std::pow(t,2);
-        }
-        else if(t_a <= t && t <= duration - t_a)
-        {
-          qp = qp_max;// qpp_max*t_a;
-          q = qpp_max*t_a*(t - 0.5*t_a);
-        }
-        else if(t < duration)
-        {
-          qp = qpp_max * (duration - t);
-          q = m_values.at(idx) - 0.5*qpp_max*std::pow((duration - t), 2);
-        }
-        else
-        {
-          qp = 0;
-          q = m_values.at(idx);
-        }
+          RCLCPP_DEBUG_STREAM(get_logger(),
+                              "Movement: " << (m_move_type == MoveType::LINEAR? "Linear" : "Angular") << "\n"<<
+                              "Value: " << m_values.at(idx));
+          m_move_type = m_movements.at(idx);
+          double t_a, qp_max, qpp_max;
+          if(m_move_type == MoveType::LINEAR)
+          {
+            t_a =     t_la;
+            qp_max =  m_max_vel;
+            qpp_max = m_max_acc;
+          }
+          else
+          {
+            t_a =     t_ra;
+            qp_max =  m_max_rot_vel;
+            qpp_max = m_max_rot_acc;
+          }
+          double duration = m_values.at(idx)/qp_max+t_a;
+          double t = 0.0;
 
-        t += m_dt;
+          double qp = 0.0, q = 0.0;
+          geometry_msgs::msg::TwistStamped cmd_msg;
+          cmd_msg.twist.linear.x = 0.0;
+          cmd_msg.twist.linear.y = 0.0;
+          cmd_msg.twist.angular.x = 0.0;
+          cmd_msg.twist.angular.y = 0.0;
 
-//        qp /= qp_max;
-        if(m_move_type == MoveType::LINEAR)
-        {
-          cmd_msg.linear.x = qp;
-          cmd_msg.angular.z = 0.0;
-        }
-        else
-        {
-          cmd_msg.linear.x = 0.0;
-          cmd_msg.angular.z = qp;
-        }
-//        cmd_msg.header.stamp = this->get_clock()->now();
-        m_cmd_vel__pub->publish(cmd_msg);
-        rate.sleep();
-      }
-      std::chrono::time_point t_end = std::chrono::steady_clock::now();
-      RCLCPP_INFO_STREAM(this->get_logger(),
-                         "MOTION END\n" <<
-                         "Control Loop duration: " << (t_end - t_start).count()/1.0e9 << "\n" <<
-                         "Acceleration ramp: " << t_a << "\n" <<
-                         "Motion law duration: " << duration << "\n" <<
-                         "Planned space to travel: " << m_values.at(idx)
-                         );
-    }
-    RCLCPP_INFO(get_logger(), "All movements completed.");
+          rclcpp::Rate rate(m_dt_in_ns);
+
+          RCLCPP_DEBUG(get_logger(),"Starting movement");
+          std::chrono::time_point t_start = std::chrono::steady_clock::now();
+          while(t < duration + duration/20)
+          {
+            rate.reset();
+            if(t < t_a)
+            {
+              qp = qpp_max * t;
+              q  = 0.5*qpp_max*std::pow(t,2);
+            }
+            else if(t_a <= t && t <= duration - t_a)
+            {
+              qp = qp_max;// qpp_max*t_a;
+              q = qpp_max*t_a*(t - 0.5*t_a);
+            }
+            else if(t < duration)
+            {
+              qp = qpp_max * (duration - t);
+              q = m_values.at(idx) - 0.5*qpp_max*std::pow((duration - t), 2);
+            }
+            else
+            {
+              qp = 0;
+              q = m_values.at(idx);
+            }
+
+            t += m_dt;
+
+    //        qp /= qp_max;
+            if(m_move_type == MoveType::LINEAR)
+            {
+              cmd_msg.twist.linear.x = qp;
+              cmd_msg.twist.angular.z = 0.0;
+            }
+            else
+            {
+              cmd_msg.twist.linear.x = 0.0;
+              cmd_msg.twist.angular.z = qp;
+            }
+            cmd_msg.header.stamp = this->get_clock()->now();
+            m_cmd_vel__pub->publish(cmd_msg);
+    //        m_cmd_pos__pub->publish()
+            rate.sleep();
+          }
+          std::chrono::time_point t_end = std::chrono::steady_clock::now();
+          RCLCPP_INFO_STREAM(this->get_logger(),
+                             "MOTION END\n" <<
+                             "Control Loop duration: " << (t_end - t_start).count()/1.0e9 << "\n" <<
+                             "Acceleration ramp: " << t_a << "\n" <<
+                             "Motion law duration: " << duration << "\n" <<
+                             "Planned space to travel: " << m_values.at(idx)
+                             );
+        } // ending single movement
+        RCLCPP_INFO_STREAM(get_logger(), "Movement number " << n_idx << " completed.");
+    } // ending motions cycle
+    RCLCPP_INFO(get_logger(), "All motions are completed.");
     m_is_at_home = false;
 
     if(!m_is_at_home)
@@ -230,6 +257,10 @@ protected:
   double m_max_acc;
   double m_max_rot_vel;
   double m_max_rot_acc;
+  std::vector<double> motion_vel;
+  std::vector<double> motion_acc;
+  std::vector<double> motion_rot_vel;
+  std::vector<double> motion_rot_acc;
   std::chrono::nanoseconds m_dt_in_ns;
   double m_dt;
 
@@ -238,6 +269,7 @@ protected:
   std::unordered_map<std::string, std::string> m_topics;
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cmd_vel__pub;
+  rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr bag__pub;
 //  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr m_pose__sub;
   tf2_ros::Buffer::SharedPtr m_tf_buffer;
   std::shared_ptr<tf2_ros::TransformListener> m_tf_listener;
