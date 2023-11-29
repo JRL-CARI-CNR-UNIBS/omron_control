@@ -172,11 +172,11 @@ public:
           double t = 0.0;
 
           double qp = 0.0, q = 0.0;
-          geometry_msgs::msg::TwistStamped cmd_msg;
-          cmd_msg.twist.linear.x = 0.0;
-          cmd_msg.twist.linear.y = 0.0;
-          cmd_msg.twist.angular.x = 0.0;
-          cmd_msg.twist.angular.y = 0.0;
+          geometry_msgs::msg::Twist cmd_msg;
+          cmd_msg.linear.x = 0.0;
+          cmd_msg.linear.y = 0.0;
+          cmd_msg.angular.x = 0.0;
+          cmd_msg.angular.y = 0.0;
 
           rclcpp::Rate rate(m_dt_in_ns);
 
@@ -211,15 +211,15 @@ public:
     //        qp /= qp_max;
             if(m_move_type == MoveType::LINEAR)
             {
-              cmd_msg.twist.linear.x = qp;
-              cmd_msg.twist.angular.z = 0.0;
+              cmd_msg.linear.x = qp;
+              cmd_msg.angular.z = 0.0;
             }
             else
             {
-              cmd_msg.twist.linear.x = 0.0;
-              cmd_msg.twist.angular.z = qp;
+              cmd_msg.linear.x = 0.0;
+              cmd_msg.angular.z = qp;
             }
-            cmd_msg.header.stamp = this->get_clock()->now();
+//            cmd_msg.header.stamp = this->get_clock()->now();
             m_cmd_vel__pub->publish(cmd_msg);
     //        m_cmd_pos__pub->publish()
             rate.sleep();
