@@ -128,7 +128,7 @@ install(
   DESTINATION include/${PROJECT_NAME})
 
 install(
-  DIRECTORY config launch
+  DIRECTORY config
   DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
