@@ -11,8 +11,8 @@ omron:
       motion_law:
         max_vel_in_m: [0.1, 0.2]
         max_acc_in_m: [0.2, 0.4]
-        max_rot_vel_in_deg: [10.0]
-        max_rot_acc_in_deg: [100.0]
+        max_rot_vel_in_deg: [20.0, 20.0]
+        max_rot_acc_in_deg: [200.0, 200.0]
       update_period_in_ms: 50 # ms
 
       movements: [0]
@@ -21,5 +21,6 @@ omron:
   omron_test_bag_node:
     ros__parameters:
       cmd_vel_topic: "/omron/cmd_vel"
-      state_pose_topic: "/omron/status/pose"
-      state_vel_topic: "/omron/status/velocity"
+      state_pose_topic: "/status/pose"
+      state_vel_topic:  "/status/velocity"
+      test_number_topic: "/omron/omron_test_number"

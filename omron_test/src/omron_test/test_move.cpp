@@ -143,7 +143,7 @@ public:
 
         // Publish bag
         std_msgs::msg::Int16 bag_msg;
-        bag_msg.data = n_idx;
+        bag_msg.data = n_idx + 1;
         bag__pub->publish(bag_msg);
 
         const double m_max_vel=motion_vel.at(n_idx);
