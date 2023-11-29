@@ -50,6 +50,10 @@ public:
     this->declare_parameter("max_rot_acc_in_deg",  rclcpp::ParameterType::PARAMETER_DOUBLE);
     this->declare_parameter("update_period_in_ms", rclcpp::ParameterType::PARAMETER_INTEGER);
     this->declare_parameter("motion_law", rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    this->declare_parameter("motion_law.max_vel_in_m",        rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    this->declare_parameter("motion_law.max_acc_in_m",        rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    this->declare_parameter("motion_law.max_rot_vel_in_deg",  rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    this->declare_parameter("motion_law.max_rot_acc_in_deg",  rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY);
 
     this->declare_parameter("use_close_loop",      rclcpp::ParameterType::PARAMETER_BOOL);
 
@@ -144,17 +148,24 @@ public:
 
         const double m_max_vel=motion_vel.at(n_idx);
         const double m_max_acc=motion_acc.at(n_idx);
-        const double m_max_rot_vel=motion_rot_vel.at(n_idx);
-        const double m_max_rot_acc=motion_rot_acc.at(n_idx);
+        const double m_max_rot_vel=motion_rot_vel.at(n_idx)*M_PI/180.0; // conversion from deg/s to rad/s
+        const double m_max_rot_acc=motion_rot_acc.at(n_idx)*M_PI/180.0; // conversion from deg/s^2 to rad/s^2
 
         const double t_la = m_max_vel/m_max_acc;
         const double t_ra = m_max_rot_vel/m_max_rot_acc;
         for(size_t idx = 0; idx < m_movements.size(); ++idx)
         {
+          m_move_type = m_movements.at(idx);
+          if (m_move_type == MoveType::ANGULAR){
+              m_values_idx=m_values.at(idx)*M_PI/180.0; // conversion from deg/s to rad/s
+          }
+          else {
+              m_values_idx=m_values.at(idx);
+          }
+
           RCLCPP_DEBUG_STREAM(get_logger(),
                               "Movement: " << (m_move_type == MoveType::LINEAR? "Linear" : "Angular") << "\n"<<
-                              "Value: " << m_values.at(idx));
-          m_move_type = m_movements.at(idx);
+                              "Value: " << m_values_idx);
           double t_a, qp_max, qpp_max;
           if(m_move_type == MoveType::LINEAR)
           {
@@ -168,7 +179,7 @@ public:
             qp_max =  m_max_rot_vel;
             qpp_max = m_max_rot_acc;
           }
-          double duration = m_values.at(idx)/qp_max+t_a;
+          double duration = m_values_idx/qp_max+t_a;
           double t = 0.0;
 
           double qp = 0.0, q = 0.0;
@@ -198,12 +209,12 @@ public:
             else if(t < duration)
             {
               qp = qpp_max * (duration - t);
-              q = m_values.at(idx) - 0.5*qpp_max*std::pow((duration - t), 2);
+              q = m_values_idx - 0.5*qpp_max*std::pow((duration - t), 2);
             }
             else
             {
               qp = 0;
-              q = m_values.at(idx);
+              q = m_values_idx;
             }
 
             t += m_dt;
@@ -230,18 +241,17 @@ public:
                              "Control Loop duration: " << (t_end - t_start).count()/1.0e9 << "\n" <<
                              "Acceleration ramp: " << t_a << "\n" <<
                              "Motion law duration: " << duration << "\n" <<
-                             "Planned space to travel: " << m_values.at(idx)
+                             "Planned space to travel: " << m_values_idx
                              );
         } // ending single movement
         RCLCPP_INFO_STREAM(get_logger(), "Movement number " << n_idx << " completed.");
+        m_is_at_home = false;
+        if(!m_is_at_home)
+        {
+          this->go_home__aria();
+        }
     } // ending motions cycle
     RCLCPP_INFO(get_logger(), "All motions are completed.");
-    m_is_at_home = false;
-
-    if(!m_is_at_home)
-    {
-      this->go_home__aria();
-    }
   }
 
 protected:
@@ -250,6 +260,7 @@ protected:
     ANGULAR = 1
   };
   MoveType m_move_type;
+  double m_values_idx;
 
   std::vector<MoveType> m_movements;
   std::vector<double> m_values;
