@@ -64,36 +64,36 @@ public:
   int m_twist_count__dbg {0}, m_pose_count__dbg {0}, m_cmd_twist_count__dbg {0};
 
 private:
-  void pose__cb(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+  void pose__cb(const std::shared_ptr<rclcpp::SerializedMessage> serial_msg)
   {
     std::lock_guard guard(m_mtx2);
     if(m_is_bag_open)
     {
       ++m_pose_count__dbg;
-      rclcpp::SerializedMessage serial_msg;
-      m_serial_pose.serialize_message(msg.get(), &serial_msg);
-      m_bag_writer->write(serial_msg, m_topics["state_pose"], "geometry_msgs/msg/PoseStamped", msg->header.stamp);
+//      std::shared_ptr<rclcpp::SerializedMessage> serial_msg = std::make_shared<rclcpp::SerializedMessage>();
+//      m_serial_pose.serialize_message(msg.get(), serial_msg.get());
+      m_bag_writer->write(serial_msg, m_topics["state_pose"], "geometry_msgs/msg/PoseStamped", get_clock()->now());
     }
   }
-  void twist__cb(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
+  void twist__cb(const std::shared_ptr<rclcpp::SerializedMessage> serial_msg)
   {
     std::lock_guard guard(m_mtx3);
     if(m_is_bag_open)
     {
       ++m_twist_count__dbg;
-      rclcpp::SerializedMessage serial_msg;
-      m_serial_twist.serialize_message(msg.get(), &serial_msg);
-      m_bag_writer->write(serial_msg, m_topics["state_vel"], "geometry_msgs/msg/TwistStamped", msg->header.stamp);
+//      std::shared_ptr<rclcpp::SerializedMessage> serial_msg = std::make_shared<rclcpp::SerializedMessage>();
+//      m_serial_twist.serialize_message(msg.get(), serial_msg.get());
+      m_bag_writer->write(serial_msg, m_topics["state_vel"], "geometry_msgs/msg/TwistStamped", get_clock()->now());
     }
   }
-  void cmd_twist__cb(const geometry_msgs::msg::Twist::SharedPtr msg)
+  void cmd_twist__cb(const std::shared_ptr<rclcpp::SerializedMessage> serial_msg)
   {
     std::lock_guard guard(m_mtx1);
     if(m_is_bag_open)
     {
       ++m_cmd_twist_count__dbg;
-      rclcpp::SerializedMessage serial_msg;
-      m_serial_twist.serialize_message(msg.get(), &serial_msg);
+//      std::shared_ptr<rclcpp::SerializedMessage> serial_msg = std::make_shared<rclcpp::SerializedMessage>();
+//      m_serial_twist.serialize_message(msg.get(), serial_msg.get());
       m_bag_writer->write(serial_msg, m_topics["cmd_vel"], "geometry_msgs/msg/Twist", get_clock()->now());
     }
   }
