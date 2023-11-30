@@ -81,11 +81,11 @@ public:
     m_max_rot_acc = max_rot_acc_in_deg*M_PI/180.0;
     m_dt_in_ns = std::chrono::nanoseconds(this->get_parameter("update_period_in_ms").as_int() * 1000000ul);
     m_dt = m_dt_in_ns.count()/1.0e9;
-    motion_vel =     this->get_parameter("motion_law.max_vel_in_m").as_double_array();
-    motion_acc =     this->get_parameter("motion_law.max_acc_in_m").as_double_array();
-    motion_rot_vel = this->get_parameter("motion_law.max_rot_vel_in_deg").as_double_array(); /* deg/s */
-    motion_rot_acc = this->get_parameter("motion_law.max_rot_acc_in_deg").as_double_array(); /* deg/s^2 */
-    if (((motion_vel.size() == motion_acc.size()) && (motion_rot_vel.size() == motion_rot_acc.size()) && (motion_vel.size() == motion_rot_acc.size()))==false) {
+    m_motion_vel =     this->get_parameter("motion_law.max_vel_in_m").as_double_array();
+    m_motion_acc =     this->get_parameter("motion_law.max_acc_in_m").as_double_array();
+    m_motion_rot_vel = this->get_parameter("motion_law.max_rot_vel_in_deg").as_double_array(); /* deg/s */
+    m_motion_rot_acc = this->get_parameter("motion_law.max_rot_acc_in_deg").as_double_array(); /* deg/s^2 */
+    if (!((m_motion_vel.size() == m_motion_acc.size()) && (m_motion_rot_vel.size() == m_motion_rot_acc.size()) && (m_motion_vel.size() == m_motion_rot_acc.size()))) {
         RCLCPP_ERROR(get_logger(), "Motion law has different sizes. Ending...");
         return;
     }
@@ -100,7 +100,7 @@ public:
     }
 
     m_movements.resize(movements.size());
-    std::transform(movements.begin(), movements.end(), m_movements.begin(),[this](const long d){
+    std::transform(movements.begin(), movements.end(), m_movements.begin(),[](const long d){
       return d == 0? MoveType::LINEAR : MoveType::ANGULAR;
     });
     if (m_movements.size() != m_values.size())
@@ -138,7 +138,7 @@ public:
         return;
       }
     }
-    for(unsigned int n_idx = 0; n_idx < motion_vel.size(); ++n_idx){
+    for(unsigned int n_idx = 0; n_idx < m_motion_vel.size(); ++n_idx){
         RCLCPP_DEBUG_STREAM(get_logger(), "Entering motion number " << n_idx);
 
         // Publish bag
@@ -146,43 +146,44 @@ public:
         bag_msg.data = n_idx + 1;
         bag__pub->publish(bag_msg);
 
-        const double m_max_vel=motion_vel.at(n_idx);
-        const double m_max_acc=motion_acc.at(n_idx);
-        const double m_max_rot_vel=motion_rot_vel.at(n_idx)*M_PI/180.0; // conversion from deg/s to rad/s
-        const double m_max_rot_acc=motion_rot_acc.at(n_idx)*M_PI/180.0; // conversion from deg/s^2 to rad/s^2
+        const double max_vel=m_motion_vel.at(n_idx);
+        const double max_acc=m_motion_acc.at(n_idx);
+        const double max_rot_vel=m_motion_rot_vel.at(n_idx)*M_PI/180.0; // conversion from deg/s to rad/s
+        const double max_rot_acc=m_motion_rot_acc.at(n_idx)*M_PI/180.0; // conversion from deg/s^2 to rad/s^2
 
-        const double t_la = m_max_vel/m_max_acc;
-        const double t_ra = m_max_rot_vel/m_max_rot_acc;
+        const double t_la = max_vel/max_acc;
+        const double t_ra = max_rot_vel/max_rot_acc;
         for(size_t idx = 0; idx < m_movements.size(); ++idx)
         {
           m_move_type = m_movements.at(idx);
+          double val;
           if (m_move_type == MoveType::ANGULAR){
-              m_values_idx=m_values.at(idx)*M_PI/180.0; // conversion from deg/s to rad/s
+              val=m_values.at(idx)*M_PI/180.0; // conversion from deg/s to rad/s
           }
           else {
-              m_values_idx=m_values.at(idx);
+              val=m_values.at(idx);
           }
 
           RCLCPP_DEBUG_STREAM(get_logger(),
                               "Movement: " << (m_move_type == MoveType::LINEAR? "Linear" : "Angular") << "\n"<<
-                              "Value: " << m_values_idx);
+                              "Value: " << val);
           double t_a, qp_max, qpp_max;
           if(m_move_type == MoveType::LINEAR)
           {
             t_a =     t_la;
-            qp_max =  m_max_vel;
-            qpp_max = m_max_acc;
+            qp_max =  max_vel;
+            qpp_max = max_acc;
           }
           else
           {
             t_a =     t_ra;
-            qp_max =  m_max_rot_vel;
-            qpp_max = m_max_rot_acc;
+            qp_max =  max_rot_vel;
+            qpp_max = max_rot_acc;
           }
-          double duration = m_values_idx/qp_max+t_a;
+          double duration = val/qp_max+t_a;
           double t = 0.0;
 
-          double qp = 0.0, q = 0.0;
+          double qp = 0.0; // q = 0.0;
           geometry_msgs::msg::Twist cmd_msg;
           cmd_msg.linear.x = 0.0;
           cmd_msg.linear.y = 0.0;
@@ -199,22 +200,22 @@ public:
             if(t < t_a)
             {
               qp = qpp_max * t;
-              q  = 0.5*qpp_max*std::pow(t,2);
+//              q  = 0.5*qpp_max*std::pow(t,2);
             }
             else if(t_a <= t && t <= duration - t_a)
             {
               qp = qp_max;// qpp_max*t_a;
-              q = qpp_max*t_a*(t - 0.5*t_a);
+//              q = qpp_max*t_a*(t - 0.5*t_a);
             }
             else if(t < duration)
             {
               qp = qpp_max * (duration - t);
-              q = m_values_idx - 0.5*qpp_max*std::pow((duration - t), 2);
+//              q = val - 0.5*qpp_max*std::pow((duration - t), 2);
             }
             else
             {
               qp = 0;
-              q = m_values_idx;
+//              q = val;
             }
 
             t += m_dt;
@@ -241,7 +242,7 @@ public:
                              "Control Loop duration: " << (t_end - t_start).count()/1.0e9 << "\n" <<
                              "Acceleration ramp: " << t_a << "\n" <<
                              "Motion law duration: " << duration << "\n" <<
-                             "Planned space to travel: " << m_values_idx
+                             "Planned space to travel: " << val
                              );
         } // ending single movement
         RCLCPP_INFO_STREAM(get_logger(), "Movement number " << n_idx << " completed.");
@@ -260,7 +261,6 @@ protected:
     ANGULAR = 1
   };
   MoveType m_move_type;
-  double m_values_idx;
 
   std::vector<MoveType> m_movements;
   std::vector<double> m_values;
@@ -268,10 +268,10 @@ protected:
   double m_max_acc;
   double m_max_rot_vel;
   double m_max_rot_acc;
-  std::vector<double> motion_vel;
-  std::vector<double> motion_acc;
-  std::vector<double> motion_rot_vel;
-  std::vector<double> motion_rot_acc;
+  std::vector<double> m_motion_vel;
+  std::vector<double> m_motion_acc;
+  std::vector<double> m_motion_rot_vel;
+  std::vector<double> m_motion_rot_acc;
   std::chrono::nanoseconds m_dt_in_ns;
   double m_dt;
 
@@ -287,6 +287,7 @@ protected:
   geometry_msgs::msg::PoseStamped m_pose__msg;
   geometry_msgs::msg::PoseStamped m_home;
   bool m_is_home_set {false};
+  bool m_is_at_home {false};
 
 /*
  * Nav2
@@ -428,8 +429,6 @@ protected:
     RCLCPP_INFO(this->get_logger(), "Return home completed");
     m_is_at_home = true;
   }
-
-  bool m_is_at_home {false};
 
 };
 

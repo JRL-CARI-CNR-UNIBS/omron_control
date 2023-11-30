@@ -30,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -303,10 +303,6 @@ Visualization Manager:
       Frame Timeout: 600
       Frames:
         All Enabled: true
-        base_link:
-          Value: true
-        home:
-          Value: true
         map:
           Value: true
         odom:
@@ -318,11 +314,8 @@ Visualization Manager:
       Show Names: false
       Tree:
         map:
-          home:
-            {}
           odom:
-            base_link:
-              {}
+            {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -371,25 +364,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.871962785720825
+      Distance: 29.27925682067871
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.7936923503875732
-        Y: -9.732297897338867
-        Z: 3.1395912170410156
+        X: 1.4898308515548706
+        Y: -3.9719817638397217
+        Z: -2.6650521755218506
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5247951745986938
+      Pitch: 0.6247960329055786
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.050393581390381
+      Yaw: 2.215394973754883
     Saved: ~
 Window Geometry:
   Displays:
