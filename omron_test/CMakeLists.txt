@@ -22,6 +22,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(omron_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 ###############
 ## Test Node ##
@@ -49,6 +50,7 @@ ament_target_dependencies(omron_test_bag_node
   rclcpp
   geometry_msgs
   rosbag2_cpp
+  nav_msgs
   )
 install(TARGETS omron_test_bag_node
     DESTINATION lib/${PROJECT_NAME})

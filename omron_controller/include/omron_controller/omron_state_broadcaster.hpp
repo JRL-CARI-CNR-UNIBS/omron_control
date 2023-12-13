@@ -49,7 +49,7 @@ private:
   std::vector<std::string> m_state_interface_names,
                            m_command_interface_names;
 
-  static constexpr char K_ODOM_TOPIC[] {"/odom"};
+  static constexpr char K_ODOM_TOPIC[] {"/omron/odom"};
 };
 }
 
