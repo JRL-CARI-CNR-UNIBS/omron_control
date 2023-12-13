@@ -1,0 +1,82 @@
+omron_state_broadcaster:
+  tf:
+    use_tf: {
+      type: bool,
+      default_value: true,
+      description: "broadcast pose through tf"
+    }
+    from: {
+      type: string,
+      default_value: "",
+      description: "transform from ...",
+      validation: {
+        not_empty<>: null
+      }
+    }
+    to: {
+      type: string,
+      default_value: "",
+      description: "transform to ...",
+      validation: {
+        not_empty<>: null
+      }
+    }
+    odom: {
+      type: string,
+      default_value: "",
+      description: "... passing through odometry ...",
+      validation: {
+        not_empty<>: null
+      }
+    }
+  interfaces:
+    velocity:
+      prefix: {
+        type: string,
+        default_value: "omron_base",
+        description: "Prefix of the interfaces"
+      }
+      command: {
+        type: string_array,
+        default_value: [],
+        description: "",
+        validation: {
+          unique<>: null
+        }
+      }
+      states: {
+        type: string_array,
+        default_value: [],
+        description: "",
+        validation: {
+          unique<>: null
+        }
+      }
+    pose:
+      prefix: {
+        type: string,
+        default_value: "omron_base/pose",
+        description: "Prefix of the interfaces"
+      }
+      states: {
+        type: string_array,
+        default_value: [],
+        description: "",
+        validation: {
+          unique<>: null
+        }
+      }
+    reference:
+      prefix: {
+        type: string,
+        default_value: "omron_base/reference",
+        description: "Prefix of the interfaces"
+      }
+      command: {
+        type: string_array,
+        default_value: [],
+        description: "",
+        validation: {
+          unique<>: null
+        }
+      }

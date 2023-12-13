@@ -46,9 +46,38 @@ generate_parameter_library(omron_trajectory_controller_parameters
   config/required_parameters__omron_trajectory_controller.yaml
 )
 
-#########################
+generate_parameter_library(omron_state_broadcaster_parameters
+  config/required_parameters__omron_state_broadcaster.yaml
+)
+
+#######################
+## State Broadcaster ##
+#######################
+
+add_library(omron_state_broadcaster SHARED
+  src/${PROJECT_NAME}/omron_state_broadcaster.cpp
+  include/${PROJECT_NAME}/omron_state_broadcaster.hpp
+)
+
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  target_compile_definitions(omron_state_broadcaster PRIVATE DEBUG_ON)
+endif()
+
+target_include_directories(omron_state_broadcaster PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+
+ament_target_dependencies(omron_state_broadcaster
+  ${PACKAGES_REQUIRED_HERE}
+)
+
+target_link_libraries(omron_state_broadcaster
+  omron_state_broadcaster_parameters)
+
+########################
 ## Forward Controller ##
-#########################
+########################
 
 add_library(omron_forward_controller SHARED
   ${ADD_HPP_FILE}
@@ -99,12 +128,21 @@ target_compile_definitions(omron_trajectory_controller PUBLIC "PLUGINLIB__DISABL
 
 
 ## Export Plugin ##
-pluginlib_export_plugin_description_file(controller_interface forward_controller_plugin.xml)
+pluginlib_export_plugin_description_file(controller_interface controllers_plugin.xml)
 
 
 #############
 ## INSTALL ##
 #############
+install(
+  TARGETS omron_state_broadcaster
+          omron_state_broadcaster_parameters
+  EXPORT export_omron_state_broadcaster
+  RUNTIME DESTINATION bin/${PROJECT_NAME}
+  ARCHIVE DESTINATION lib/${PROJECT_NAME}
+  LIBRARY DESTINATION lib/${PROJECT_NAME}
+  )
+
 install(
   TARGETS omron_forward_controller
           omron_forward_controller_parameters
@@ -145,6 +183,7 @@ endif()
 
 ament_export_targets(export_omron_forward_controller
                      export_omron_trajectory_controller
+                     export_omron_state_broadcaster
                      HAS_LIBRARY_TARGET)
 ament_export_dependencies(${PACKAGES_REQUIRED_HERE})
 
