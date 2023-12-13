@@ -1,5 +1,7 @@
 #include "omron_controller/omron_state_broadcaster.hpp"
 
+#include <pluginlib/class_list_macros.hpp>
+
 namespace omron {
 controller_interface::CallbackReturn OmronStateBroadcaster::on_init()
 {
@@ -46,7 +48,7 @@ OmronStateBroadcaster::on_configure(const rclcpp_lifecycle::State & /*previous_s
 {
   m_odom__pub = this->get_node()->create_publisher<nav_msgs::msg::Odometry>(K_ODOM_TOPIC, 10);
 
-  m_tf__broad = std::make_unique<tf2_ros::TransformBroadcaster>();
+  m_tf__broad = std::make_unique<tf2_ros::TransformBroadcaster>(*(this->get_node()));
 
   // state interfaces
   std::vector<std::string> state_interface_names;
@@ -81,7 +83,7 @@ OmronStateBroadcaster::on_activate(const rclcpp_lifecycle::State & /*previous_st
 }
 
 controller_interface::return_type
-OmronStateBroadcaster::update(const rclcpp::Time & time, const rclcpp::Duration & period)
+OmronStateBroadcaster::update(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   // Status
   geometry_msgs::msg::TwistStamped twist_msg;
@@ -129,9 +131,9 @@ OmronStateBroadcaster::update(const rclcpp::Time & time, const rclcpp::Duration 
     tf_msg.transform.rotation.w = pose_msg.pose.orientation.w;
     m_tf__broad->sendTransform(tf_msg);
   }
-  controller_interface::return_type::OK;
+  return controller_interface::return_type::OK;
 }
 
 } // namespace omron
 
-PLUGINLIB_EXPORT_CLASS(omron::OmronStateBroadcaster, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(omron::OmronStateBroadcaster, controller_interface::ControllerInterface);

@@ -117,24 +117,6 @@ namespace omron {
     m_use_open_loop = m_params.feedback.use_open_loop;
     m_kp = m_params.feedback.kp;
 
-    if(m_params.tf.use_tf)
-    {
-      geometry_msgs::msg::TransformStamped tf_odom;
-      tf_odom.header.frame_id = m_params.tf.from;
-      tf_odom.child_frame_id = "odom";
-      tf_odom.header.stamp = this->get_node()->get_clock()->now();
-      tf_odom.transform.translation.x = 0.0;
-      tf_odom.transform.translation.y = 0.0;
-      tf_odom.transform.translation.z = 0.0;
-      tf_odom.transform.rotation.x = 0.0;
-      tf_odom.transform.rotation.y = 0.0;
-      tf_odom.transform.rotation.z = 0.0;
-      tf_odom.transform.rotation.w = 1.0;
-      auto static_tf__broad = tf2_ros::StaticTransformBroadcaster(this->get_node());
-      static_tf__broad.sendTransform(tf_odom);
-      RCLCPP_WARN(this->get_node()->get_logger(), "Static odom published");
-    }
-
     return controller_interface::CallbackReturn::SUCCESS;
   }
 
@@ -202,55 +184,6 @@ namespace omron {
   controller_interface::return_type
   OmronController::update_and_write_commands(const rclcpp::Time&, const rclcpp::Duration &)
   {
-    // Status
-    geometry_msgs::msg::TwistStamped twist_msg;
-    twist_msg.header.stamp = this->get_node()->get_clock()->now();
-    twist_msg.twist.linear.x = state_interfaces_.at(0).get_value();
-    twist_msg.twist.angular.z = state_interfaces_.at(1).get_value();
-    m_status_vel__pub->publish(twist_msg);
-
-    geometry_msgs::msg::PoseStamped pose_msg;
-    pose_msg.header.stamp = twist_msg.header.stamp;
-    pose_msg.pose.position.x = state_interfaces_.at(2).get_value();
-    pose_msg.pose.position.y = state_interfaces_.at(3).get_value();
-    tf2::Quaternion quat({0.0,0.0,1.0},state_interfaces_.at(4).get_value() * M_PI/180.0);
-//    pose_msg.pose.orientation.z = std::sin(state_interfaces_.at(4).get_value()/2.0);
-//    pose_msg.pose.orientation.w = std::cos(state_interfaces_.at(4).get_value()/2.0);
-    pose_msg.pose.orientation = tf2::toMsg(quat);
-    m_status_pose__pub->publish(pose_msg);
-
-    nav_msgs::msg::Odometry odom_msg;
-    odom_msg.header = twist_msg.header;
-    odom_msg.pose.pose = pose_msg.pose;
-    odom_msg.twist.twist = twist_msg.twist;
-    m_odom__pub->publish(odom_msg);
-
-    if(m_params.tf.use_tf)
-    {
-      geometry_msgs::msg::TransformStamped tf_odom;
-      tf_odom.header.frame_id = m_params.tf.from;
-      tf_odom.child_frame_id = m_params.tf.odom;
-      tf_odom.header.stamp = this->get_node()->get_clock()->now();
-      tf_odom.transform.translation.x = 0.0;
-      tf_odom.transform.translation.y = 0.0;
-      tf_odom.transform.translation.z = 0.0;
-      tf_odom.transform.rotation.x = 0.0;
-      tf_odom.transform.rotation.y = 0.0;
-      tf_odom.transform.rotation.z = 0.0;
-      tf_odom.transform.rotation.w = 1.0;
-      m_tf__broad->sendTransform(tf_odom);
-
-      geometry_msgs::msg::TransformStamped tf_msg;
-      tf_msg.header.stamp = twist_msg.header.stamp;
-      tf_msg.header.frame_id = m_params.tf.odom; //m_params.tf.from;
-      tf_msg.child_frame_id = m_params.tf.to;
-      tf_msg.transform.translation.x = pose_msg.pose.position.x;
-      tf_msg.transform.translation.y = pose_msg.pose.position.y;
-      tf_msg.transform.rotation.z = pose_msg.pose.orientation.z;
-      tf_msg.transform.rotation.w = pose_msg.pose.orientation.w;
-      m_tf__broad->sendTransform(tf_msg);
-    }
-
     // Command
     if(std::isnan(reference_interfaces_.at(0)) || std::isnan(reference_interfaces_.at(1)))
     {
