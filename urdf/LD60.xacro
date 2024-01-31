@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<robot name="LD60" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="M_PI" value="3.14159"/>
+
+
+  <!-- Base Size -->
+  <xacro:property name="base_x_size" value="1.02" />
+  <xacro:property name="base_y_size" value="0.55" />
+  <xacro:property name="base_z_size" value="0.35" />
+
+  <xacro:macro name="LD60" params="prefix *origin">
+  
+    <!-- Base footprint is on the ground under the robot -->
+    <!-- <link name="${prefix}base_footprint">
+      <inertial>
+          <mass value="1000" />
+          <inertia ixx="0.001" ixy="0.01" ixz="0.01" iyy="0.001" iyz="0.01" izz="0.001" />
+      </inertial>
+    </link>   -->
+    <!-- Base link is the center of the robot's bottom plate -->
+    <link name="${prefix}base_link_omron">
+      <visual>
+        <origin xyz="0 0 0.2" rpy="${M_PI/2} 0 ${M_PI/2}" />
+        <geometry>
+          <mesh filename="file://$(find omron_description)//mesh/LD60.stl"/>
+        </geometry>
+        <material name="Gray">
+          <color rgba="0.5 0.5 0.5 1.0" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.2" rpy="${M_PI/2} 0 ${M_PI/2}" />
+        <geometry>
+          <mesh filename="file://$(find omron_description)//mesh/LD60.stl"/>
+        </geometry>
+        <material name="Gray">
+          <color rgba="0.5 0.5 0.5 1.0" />
+        </material>
+      </collision>
+      <inertial>
+          <mass value="4000" />
+          <inertia ixx="1.48454" ixy="0.01" ixz="0.01" iyy="3.02861" iyz="0.01" izz="4.10178" />
+      </inertial>
+    </link>
+
+    <joint name="${prefix}base_footprint_joint" type="fixed">
+      <xacro:insert_block name="origin"/> 
+      <parent link="${prefix}base_link" />
+      <child link="${prefix}base_link_omron" />
+    </joint>
+  
+
+  </xacro:macro>
+
+
+</robot>
