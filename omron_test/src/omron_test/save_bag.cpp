@@ -54,7 +54,6 @@ public:
 private:
   void odom__cb(const std::shared_ptr<rclcpp::SerializedMessage> serial_msg)
   {
-    std::lock_guard guard(m_mtx2);
     if(m_is_bag_open)
     {
 //      std::shared_ptr<rclcpp::SerializedMessage> serial_msg = std::make_shared<rclcpp::SerializedMessage>();
@@ -64,7 +63,6 @@ private:
   }
   void cmd_twist__cb(const std::shared_ptr<rclcpp::SerializedMessage> serial_msg)
   {
-    std::lock_guard guard(m_mtx1);
     if(m_is_bag_open)
     {
 //      std::shared_ptr<rclcpp::SerializedMessage> serial_msg = std::make_shared<rclcpp::SerializedMessage>();
@@ -75,7 +73,6 @@ private:
   void manage_bag__cb(const std_msgs::msg::Int16& msg)
   {
     RCLCPP_WARN(get_logger(), "Changing bag status -> received: %d", msg.data);
-    std::scoped_lock(m_mtx1, m_mtx2, m_mtx3);
     if(m_is_bag_open)
     {
       if(msg.data == 0)
@@ -126,7 +123,6 @@ private:
   rclcpp::Serialization<geometry_msgs::msg::TwistStamped> m_serial_twist;
 
   bool m_is_bag_open;
-  std::mutex m_mtx1, m_mtx2, m_mtx3;
 };
 
 int main(int argc, char** argv)

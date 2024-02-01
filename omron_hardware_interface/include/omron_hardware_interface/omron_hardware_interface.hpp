@@ -50,7 +50,7 @@ public:
 private:
   rclcpp::Logger m_logger = rclcpp::get_logger("OmronAria");
 
-  int m_hz {100};
+  int m_hz;
 
   struct ConnectionData {
     std::string ip;
@@ -91,6 +91,7 @@ private:
     struct Twist{
       double x,y,rz;
     } vel;
+    bool is_new;
   } m_status_data;
   void get_pose_status__cb(ArNetPacket *packet);
 //  void localise(); // TODO: da implementare con un'altra command_interface

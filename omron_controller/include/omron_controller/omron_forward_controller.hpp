@@ -56,8 +56,6 @@ private:
   realtime_tools::RealtimeBuffer<geometry_msgs::msg::Twist::SharedPtr> m_rt_buffer__ptr;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr m_cmd_vel__sub;
 
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_status_vel__pub;
-  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr m_status_pose__pub;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom__pub;
 
   std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf__broad;

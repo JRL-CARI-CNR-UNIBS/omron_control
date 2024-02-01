@@ -65,12 +65,6 @@ namespace omron {
                           m_rt_buffer__ptr.writeFromNonRT(msg);
                        });
 
-    m_status_vel__pub = this->get_node()->create_publisher<geometry_msgs::msg::TwistStamped>(
-                          status_twist_topic,
-                          rclcpp::SystemDefaultsQoS());
-    m_status_pose__pub = this->get_node()->create_publisher<geometry_msgs::msg::PoseStamped>(
-                           status_pose_topic,
-                           rclcpp::SystemDefaultsQoS());
     m_odom__pub = this->get_node()->create_publisher<nav_msgs::msg::Odometry>(
                     odom_topic,
                     rclcpp::SystemDefaultsQoS()
@@ -182,7 +176,7 @@ namespace omron {
   }
 
   controller_interface::return_type
-  OmronController::update_and_write_commands(const rclcpp::Time&, const rclcpp::Duration &)
+  OmronController::update_and_write_commands(const rclcpp::Time&, const rclcpp::Duration& duration)
   {
     // Command
     if(std::isnan(reference_interfaces_.at(0)) || std::isnan(reference_interfaces_.at(1)))

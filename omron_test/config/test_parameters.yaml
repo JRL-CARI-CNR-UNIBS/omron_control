@@ -13,13 +13,13 @@ omron:
         max_acc_in_m: [0.2, 0.4]
         max_rot_vel_in_deg: [20.0, 20.0]
         max_rot_acc_in_deg: [200.0, 200.0]
-      update_period_in_ms: 50 # ms
+      update_period_in_ms: 10 # ms
 
-      movements: [0]
-      values:    [2.0]
+      movements: [0, 1, 0]
+      values:    [2.0, 360.0, 0.5]
 
   omron_test_bag_node:
     ros__parameters:
       cmd_vel_topic: "/omron/cmd_vel"
-      odom_topic: "/odom"
+      odom_topic: "/omron/odom"
       test_number_topic: "/omron/omron_test_number"

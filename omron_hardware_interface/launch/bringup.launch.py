@@ -65,9 +65,17 @@ def generate_launch_description():
       arguments=["omron_forward_controller"]
     )
 
+    spawn_state_bcast = Node(
+      package="controller_manager",
+      executable="spawner",
+      output="screen",
+#      parameters=[robot_description, controller_parameters]
+      arguments=["omron_state_broadcaster"]
+    )
+
     delay_controller_after_manager = TimerAction(
-      period = 10.0,
-      actions = [spawn_controller]
+      period = 5.0,
+      actions = [spawn_controller, spawn_state_bcast]
     )
 
     ###################

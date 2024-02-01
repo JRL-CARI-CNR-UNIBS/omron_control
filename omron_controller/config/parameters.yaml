@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 50
+    update_rate: 100 # Hz
 
     omron_forward_controller:
       type: omron/OmronController
@@ -45,32 +45,34 @@ omron_forward_controller:
           - "angular/z"
 
 omron_state_broadcaster:
-  tf:
-    use_tf: true
-    to: "base_link"
-    from: "map"
-    odom: "odom"
-  interfaces:
-    velocity:
-      prefix: "omron_base/velocity"
-      command:
-        - "linear/velocity"
-        - "angular/velocity"
-      states:
-        - "linear/velocity"
-        - "angular/velocity"
-    pose:
-      prefix: "omron_base/pose"
-      states:
-      - "linear/x"
-      - "linear/y"
-      - "angular/z"
-    reference:
-      prefix: "omron_base/reference"
-      command:
+  ros__parameters:
+    tf:
+      use_tf: true
+      to: "base_link"
+      from: "map"
+      odom: "odom"
+    interfaces:
+      velocity:
+        prefix: "omron_base/velocity"
+        command:
+          - "linear/velocity"
+          - "angular/velocity"
+        states:
+          - "linear/velocity"
+          - "angular/velocity"
+      pose:
+        prefix: "omron_base/pose"
+        states:
         - "linear/x"
-  #          - "linear/y"
-  #          - "linear/z"
-  #          - "angular/x"
-  #          - "angular/y"
+        - "linear/y"
         - "angular/z"
+      reference:
+        prefix: "omron_base/reference"
+        command:
+          - "linear/x"
+    #          - "linear/y"
+    #          - "linear/z"
+    #          - "angular/x"
+    #          - "angular/y"
+          - "angular/z"
+  

@@ -185,7 +185,8 @@ OmronAria::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
   if(m_client.dataExists("updateNumbers"))
   {
     m_client.addHandler("updateNumbers", &get_pose_status__ftor);
-    m_client.request("updateNumbers", 50);
+    m_client.request("updateNumbers", 1/(double)m_hz);
+    RCLCPP_INFO(m_logger, "'updateNumbers request enabled with frequency %f", 1/(double)m_hz);
   }
   else
   {
@@ -237,6 +238,8 @@ OmronAria::read(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/
     m_pose__states[2] = m_status_data.pose.rz;
     m_twist__states[0] = m_status_data.vel.x;
     m_twist__states[1] = m_status_data.vel.rz;
+//    printf("Is data new? %d\n", (int)m_status_data.is_new);
+    m_status_data.is_new = false;
   }
   else
   {
@@ -276,6 +279,7 @@ void OmronAria::get_pose_status__cb(ArNetPacket *packet)
   m_status_data.vel.rz =              (double) packet->bufToByte2();
   m_status_data.vel.y =             (  (double) packet->bufToByte2() )/1000.0;
   m_status_data.temperature =         (double) packet->bufToByte();
+  m_status_data.is_new = true;
 }
 
 void OmronAria::set_cmd_vel(const double& forward, const double& turn)

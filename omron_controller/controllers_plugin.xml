@@ -7,3 +7,12 @@
     </description>
   </class>
 </library>
+<library path="omron_state_broadcaster">
+  <class name="omron/OmronStateBroadcaster"
+         type="omron::OmronStateBroadcaster"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>
+      State broadcaster for Aria-based omron hardware interface
+    </description>
+  </class>
+</library>
