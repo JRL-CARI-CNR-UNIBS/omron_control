@@ -1,0 +1,8 @@
+int32 x
+int32 y
+int16 theta
+---
+uint8 result
+uint8 ARRIVED = 0
+uint8 GOING_TO = 1
+uint8 FAILED = 2

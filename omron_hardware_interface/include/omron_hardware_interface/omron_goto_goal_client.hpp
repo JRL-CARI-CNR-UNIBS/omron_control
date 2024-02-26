@@ -2,6 +2,7 @@
 #define OMRON_GOTO_GOAL_CLIENT_HPP
 
 #include <omron_msgs/srv/goto_goal.hpp>
+#include <omron_msgs/srv/goto_pose.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <Aria/Aria.h>
 #include <ArNetworking/ArNetworking.h>
@@ -15,6 +16,9 @@ public:
 
   void go_to_goal__cb(const omron_msgs::srv::GotoGoal::Request::SharedPtr request,
                             omron_msgs::srv::GotoGoal::Response::SharedPtr response);
+
+  void go_to_pose__cb(const omron_msgs::srv::GotoPose::Request::SharedPtr request,
+                            omron_msgs::srv::GotoPose::Response::SharedPtr response);
 //  std::vector<std::string> get_goal_names();
   std::string get_actual_goal();
 private:
