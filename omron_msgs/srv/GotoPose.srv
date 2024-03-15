@@ -1,6 +1,4 @@
-int32 x
-int32 y
-int16 theta
+geometry_msgs/PoseStamped goal
 ---
 uint8 result
 uint8 ARRIVED = 0

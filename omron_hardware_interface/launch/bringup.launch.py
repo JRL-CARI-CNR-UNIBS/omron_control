@@ -19,7 +19,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "rviz",
-            default_value="false",
+            default_value="true",
             description="Start RViz2 automatically with this launch file.",
         )
     )
@@ -34,7 +34,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("omron_app"),
+                    FindPackageShare("omron_description"),
                     "urdf",
                     "system.urdf.xacro",
                 ]
@@ -94,6 +94,9 @@ def generate_launch_description():
       executable='omron_support_nodes',
       arguments=['--ros-args', '--log-level', 'warn'],
       remappings=[('cloud_in', 'omron/cloud_in')],
+      parameters=[{"map":"/map",
+                   "odom": "/odom",
+                   "frame":"omron/base_link"}],
       output='screen'
     )
 

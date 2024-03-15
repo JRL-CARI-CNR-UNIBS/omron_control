@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<robot name="LD60" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find omron_description)/urdf/LD60.xacro"/>
+
+  <xacro:include filename="$(find omron_hardware_interface)/urdf/omron.ros2_control.xacro"/>
+  <xacro:omron_aria name="omron_aria" use_fake_hardware="false"/>
+
+</robot>

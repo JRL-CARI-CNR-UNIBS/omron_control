@@ -19,12 +19,17 @@ set(PACKAGES_REQUIRED_HERE
   ros2_control
   hardware_interface
   pluginlib
+  tf2
+  tf2_ros
+  tf2_eigen
+  tf2_geometry_msgs
 )
 
 set(SUPPORT_NODES_REQUIRED
   nav_msgs
   sensor_msgs
-  omron_msgs)
+  omron_msgs
+  geometry_msgs)
 
 foreach(package IN ITEMS ${PACKAGES_REQUIRED_HERE})
   find_package(${package} REQUIRED)
