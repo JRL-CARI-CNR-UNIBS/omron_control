@@ -13,12 +13,20 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
     m_client(t_client)
 {
   this->declare_parameter("frame", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("map_frame", rclcpp::PARAMETER_STRING);
   this->declare_parameter("map", rclcpp::PARAMETER_STRING);
   this->declare_parameter("odom", rclcpp::PARAMETER_STRING);
+
+  m_enable_goto_pose = true;
 
   if(!this->get_parameter("frame", m_frame))
   {
     RCLCPP_ERROR(this->get_logger(), "Missing 'frame' parameter, gotoPose() disabled");
+    m_enable_goto_pose = false;
+  }
+  if(!this->get_parameter("map_frame", m_map_frame))
+  {
+    RCLCPP_ERROR(this->get_logger(), "Missing 'map_frame' parameter, gotoPose() disabled");
     m_enable_goto_pose = false;
   }
   std::string map_topic;
@@ -53,7 +61,6 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
 
   m_goal_pose__pub = this->create_publisher<geometry_msgs::msg::PoseStamped>("omron_goal", 1);
 
-  m_enable_goto_pose = true;
   m_tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   m_tf_list = std::make_unique<tf2_ros::TransformListener>(*m_tf_buffer);
 
@@ -143,7 +150,7 @@ void OmronGotoGoalClient::go_to_pose__cb(const omron_msgs::srv::GotoPose::Reques
   // Publish pose to debug
   geometry_msgs::msg::PoseStamped goal_msg;
   goal_msg.header.stamp = this->get_clock()->now();
-  goal_msg.header.frame_id = "map";
+  goal_msg.header.frame_id = m_map_frame;
   goal_msg.pose = tf2::toMsg(goal_in_map);
   m_goal_pose__pub->publish(goal_msg);
 

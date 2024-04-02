@@ -34,6 +34,7 @@ private:
 
   // For gotoPose
   std::string m_frame;
+  std::string m_map_frame;
 
   std::unique_ptr<tf2_ros::Buffer> m_tf_buffer;
   std::unique_ptr<tf2_ros::TransformListener> m_tf_list;
