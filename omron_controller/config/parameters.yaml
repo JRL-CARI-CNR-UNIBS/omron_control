@@ -8,7 +8,10 @@ controller_manager:
     omron_state_broadcaster:
       type: omron/OmronStateBroadcaster
 
-omron_forward_controller:
+    omron_fake_position_controller:
+      type: omron/OmronFakePositionController
+
+omron_fake_position_controller:
   ros__parameters:
     feedback:
       use_open_loop: true
@@ -50,6 +53,7 @@ omron_forward_controller:
 
 omron_state_broadcaster:
   ros__parameters:
+    from_deg_to_rad: false
     tf:
       use_tf: true
       to: "base_link"
@@ -79,4 +83,4 @@ omron_state_broadcaster:
     #          - "angular/x"
     #          - "angular/y"
           - "angular/z"
-  
+

@@ -3,7 +3,7 @@ from launch.actions import DeclareLaunchArgument, RegisterEventHandler
 from launch.actions import LogInfo
 from launch.conditions import IfCondition, LaunchConfigurationEquals
 from launch.event_handlers import OnProcessExit
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, NotSubstitution
 
 from launch.actions import TimerAction
 
@@ -20,12 +20,20 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "rviz",
             default_value="true",
-            description="Start RViz2 automatically with this launch file.",
+            description="Start RViz2",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "fake",
+            default_value="true",
+            description="Start as Fake.",
         )
     )
 
     # Initialize Arguments
-    gui = LaunchConfiguration("rviz")
+    gui =  LaunchConfiguration("rviz")
+    fake = LaunchConfiguration("fake")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -39,11 +47,19 @@ def generate_launch_description():
                     "system.urdf.xacro",
                 ]
             ),
+            " ","use_fake_hardware:=","true",
         ]
     )
     robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}
 
     controller_parameters = PathJoinSubstitution([FindPackageShare("omron_controller"), "config", "parameters.yaml"])
+
+    robot_state_publisher = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        parameters=[robot_description],
+        condition=IfCondition(fake),
+    )
 
     ###################
     ### Controllers ###
@@ -62,7 +78,17 @@ def generate_launch_description():
       executable="spawner",
       output="screen",
 #      parameters=[robot_description, controller_parameters]
+      condition=IfCondition(NotSubstitution(fake)),
       arguments=["omron_forward_controller"]
+    )
+
+    spawn_controller_fake = Node(
+      package="controller_manager",
+      executable="spawner",
+      output="screen",
+#      parameters=[robot_description, controller_parameters]
+      condition=IfCondition(fake),
+      arguments=["omron_fake_position_controller"]
     )
 
     spawn_state_bcast = Node(
@@ -75,7 +101,7 @@ def generate_launch_description():
 
     delay_controller_after_manager = TimerAction(
       period = 5.0,
-      actions = [spawn_controller, spawn_state_bcast]
+      actions = [spawn_controller, spawn_state_bcast, spawn_controller_fake]
     )
 
     ###################
@@ -97,7 +123,8 @@ def generate_launch_description():
       parameters=[{"map":"/map",
                    "odom": "/odom",
                    "frame":"omron/base_link"}],
-      output='screen'
+      output='screen',
+      condition=IfCondition(NotSubstitution(fake)),
     )
 
     pcl_to_ls =    Node(
@@ -119,7 +146,8 @@ def generate_launch_description():
                 'inf_epsilon': 1.0
             }],
             arguments=['--ros-args', '--log-level', 'warn'],
-            name='pointcloud_to_laserscan'
+            name='pointcloud_to_laserscan',
+            condition=IfCondition(NotSubstitution(fake)),
         )
 
     laser_throttle = Node(
@@ -133,6 +161,7 @@ def generate_launch_description():
                 'output_topic': 'scan_rviz'
             }],
             arguments=['messages scan 2 scan_rviz', '--ros-args', '--log-level', 'warn'],
+            condition=IfCondition(NotSubstitution(fake)),
             output='screen')
 
     ## RViz2
@@ -145,6 +174,7 @@ def generate_launch_description():
     )
 
     nodes = [
+        robot_state_publisher,
         control_node,
         delay_controller_after_manager,
         map_and_laser_node,

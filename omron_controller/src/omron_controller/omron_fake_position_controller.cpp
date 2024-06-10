@@ -18,7 +18,7 @@ namespace omron {
     #endif
     try
     {
-      m_param_listener = std::make_shared<omron_controller::ParamListener>(get_node());
+      m_param_listener = std::make_shared<omron_fake_position_controller::ParamListener>(get_node());
       m_params = m_param_listener->get_params();
     }
     catch (const std::exception & e)
@@ -34,7 +34,10 @@ namespace omron {
   {
     controller_interface::InterfaceConfiguration command_interfaces_config;
     command_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-    command_interfaces_config.names = m_command_velocity_interface_names;
+    std::vector<std::string> interface_names;
+    interface_names.insert(interface_names.end(), m_command_velocity_interface_names.begin(), m_command_velocity_interface_names.end());
+    interface_names.insert(interface_names.end(), m_command_position_interface_names.begin(), m_command_position_interface_names.end());
+    command_interfaces_config.names = interface_names;
 
     return command_interfaces_config;
   }
@@ -99,7 +102,7 @@ namespace omron {
     for(std::string& name : m_command_velocity_interface_names)
       name = m_params.interfaces.velocity.prefix + "/" + name;
     m_command_position_interface_names = m_params.interfaces.pose.command;
-    for(std::string& name : m_command_velocity_interface_names)
+    for(std::string& name : m_command_position_interface_names)
       name = m_params.interfaces.pose.prefix + "/" + name;
     command_interfaces_.reserve(m_command_velocity_interface_names.size() + m_command_position_interface_names.size());
     RCLCPP_INFO(this->get_node()->get_logger(), "configure successful");
@@ -114,23 +117,28 @@ namespace omron {
     m_use_open_loop = m_params.feedback.use_open_loop;
     m_kp = m_params.feedback.kp;
 
+    for(const auto& s : state_interfaces_)
+      RCLCPP_WARN_STREAM(this->get_node()->get_logger(), "State interfaces: " << s.get_name());
+    for(const auto& s : command_interfaces_)
+      RCLCPP_WARN_STREAM(this->get_node()->get_logger(), "Command interfaces: " << s.get_name());
+
     return controller_interface::CallbackReturn::SUCCESS;
   }
 
   controller_interface::CallbackReturn
   OmronFakePositionController::on_activate(const rclcpp_lifecycle::State& /**/)
   {
-    std::vector<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> ordered_interfaces;
-    if(
-       !controller_interface::get_ordered_interfaces(
-         command_interfaces_, m_command_velocity_interface_names, std::string(""), ordered_interfaces)
-         || m_command_velocity_interface_names.size() != ordered_interfaces.size())
-    {
-      RCLCPP_ERROR(
-            this->get_node()->get_logger(), "Expected %zu command interfaces, got %zu",
-            m_command_velocity_interface_names.size(), ordered_interfaces.size());
-      return controller_interface::CallbackReturn::ERROR;
-    }
+    // std::vector<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> ordered_interfaces;
+    // if(
+    //    !controller_interface::get_ordered_interfaces(
+    //      command_interfaces_, m_command_velocity_interface_names, std::string(""), ordered_interfaces)
+    //      || m_command_velocity_interface_names.size() != ordered_interfaces.size())
+    // {
+    //   RCLCPP_ERROR(
+    //         this->get_node()->get_logger(), "Expected %zu command interfaces, got %zu",
+    //         m_command_velocity_interface_names.size(), ordered_interfaces.size());
+    //   return controller_interface::CallbackReturn::ERROR;
+    // }
 
     // TODO: reorder poses
     // x,y,theta
@@ -143,9 +151,6 @@ namespace omron {
         reference_interfaces_.begin(), reference_interfaces_.end(),
         std::numeric_limits<double>::quiet_NaN());
     RCLCPP_INFO(this->get_node()->get_logger(), "reference activate successful");
-
-    for(auto& s : state_interfaces_)
-      RCLCPP_WARN_STREAM(this->get_node()->get_logger(), "State interfaces: " << s.get_name());
 
     return controller_interface::CallbackReturn::SUCCESS;
   }

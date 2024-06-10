@@ -86,6 +86,8 @@ OmronStateBroadcaster::on_configure(const rclcpp_lifecycle::State & /*previous_s
   m_static_tf_bcast->sendTransform(tf_odom);
   this->get_node()->get_clock()->sleep_for(std::chrono_literals::operator""s(1));
 
+  m_from_deg_to_rad = m_params.from_deg_to_rad? M_PI/180.0 : 1.0;
+
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -107,7 +109,7 @@ OmronStateBroadcaster::update(const rclcpp::Time & t_time, const rclcpp::Duratio
 
   odom_msg.pose.pose.position.x = state_interfaces_.at(2).get_value();
   odom_msg.pose.pose.position.y = state_interfaces_.at(3).get_value();
-  tf2::Quaternion quat({0.0,0.0,1.0},state_interfaces_.at(4).get_value() * M_PI/180.0);
+  tf2::Quaternion quat({0.0,0.0,1.0},state_interfaces_.at(4).get_value() * m_from_deg_to_rad);
   odom_msg.pose.pose.orientation = tf2::toMsg(quat);
   m_odom__pub->publish(odom_msg);
 

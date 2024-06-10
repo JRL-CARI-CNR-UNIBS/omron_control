@@ -48,6 +48,8 @@ private:
   std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf__broad;
   std::unique_ptr<tf2_ros::StaticTransformBroadcaster> m_static_tf_bcast;
 
+  double m_from_deg_to_rad;
+
   std::vector<std::string> m_state_interface_names,
                            m_command_interface_names;
 

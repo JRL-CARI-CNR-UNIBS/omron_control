@@ -1,5 +1,5 @@
-#ifndef OMRON_FORWARD_CONTROLLER_HPP
-#define OMRON_FORWARD_CONTROLLER_HPP
+#ifndef OMRON_FAKE_POSITION_CONTROLLER_HPP
+#define OMRON_FAKE_POSITION_CONTROLLER_HPP
 
 #include <controller_interface/chainable_controller_interface.hpp>
 #include <realtime_tools/realtime_buffer.h>
@@ -11,7 +11,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include "omron_forward_controller_parameters.hpp"
+#include "omron_fake_position_controller_parameters.hpp"
 
 //#include della libreria parametri
 
@@ -47,8 +47,8 @@ private:
 
   controller_interface::return_type update_reference_from_subscribers() override;
 
-  std::shared_ptr<omron_controller::ParamListener> m_param_listener;
-  omron_controller::Params m_params;
+  std::shared_ptr<omron_fake_position_controller::ParamListener> m_param_listener;
+  omron_fake_position_controller::Params m_params;
 
   bool m_use_open_loop;
   double m_kp;
@@ -73,4 +73,4 @@ private:
 };
 }
 
-#endif // OMRON_FORWARD_CONTROLLER_HPP
+#endif // OMRON_FAKE_POSITION_CONTROLLER_HPP

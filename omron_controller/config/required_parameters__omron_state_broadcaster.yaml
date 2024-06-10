@@ -1,4 +1,9 @@
 omron_state_broadcaster:
+  from_deg_to_rad: {
+    type: bool,
+    default_value: true,
+    description: "hardware interface rotation are in deg?"
+  }
   tf:
     use_tf: {
       type: bool,
