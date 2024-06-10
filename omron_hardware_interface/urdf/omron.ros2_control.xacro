@@ -32,6 +32,11 @@
           <state_interface name="angular/velocity"/>
         </gpio>
         <gpio name="omron_base/pose">
+          <xacro:if value="${use_fake_hardware}">
+            <command_interface name="linear/x"/>
+            <command_interface name="linear/y"/>
+            <command_interface name="angular/z"/>
+          </xacro:if>
           <state_interface name="linear/x"/>
           <state_interface name="linear/y"/>
           <state_interface name="angular/z"/>

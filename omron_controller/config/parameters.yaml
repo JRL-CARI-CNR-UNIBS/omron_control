@@ -30,6 +30,10 @@ omron_forward_controller:
           - "angular/velocity"
       pose:
         prefix: "omron_base/pose"
+        command:
+        - "linear/x"
+        - "linear/y"
+        - "angular/z"
         states:
         - "linear/x"
         - "linear/y"

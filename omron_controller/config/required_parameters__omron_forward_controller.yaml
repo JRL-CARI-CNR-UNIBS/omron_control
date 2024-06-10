@@ -80,6 +80,14 @@ omron_controller:
         default_value: "omron_base/pose",
         description: "Prefix of the interfaces"
       }
+      command: { # Only for fake control
+        type: string_array,
+        default_value: [],
+        description: "",
+        validation: {
+          unique<>: null
+        }
+      }
       states: {
         type: string_array,
         default_value: [],

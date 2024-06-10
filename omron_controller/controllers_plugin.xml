@@ -7,6 +7,15 @@
     </description>
   </class>
 </library>
+<library path="omron_fake_position_controller">
+  <class name="omron/OmronFakePositionController"
+         type="omron::OmronFakePositionController"
+         base_class_type="controller_interface::ChainableControllerInterface">
+    <description>
+
+    </description>
+  </class>
+</library>
 <library path="omron_state_broadcaster">
   <class name="omron/OmronStateBroadcaster"
          type="omron::OmronStateBroadcaster"

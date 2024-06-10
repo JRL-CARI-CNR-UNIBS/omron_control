@@ -100,6 +100,31 @@ target_link_libraries(omron_forward_controller
 
 target_compile_definitions(omron_forward_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
+##############################
+## Fake Position Controller ##
+##############################
+
+add_library(omron_fake_position_controller SHARED
+  ${ADD_HPP_FILE}
+  ${ADD_CPP_FILE})
+
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  target_compile_definitions(omron_fake_position_controller PRIVATE DEBUG_ON)
+endif()
+
+target_include_directories(omron_fake_position_controller PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+  )
+
+ament_target_dependencies(omron_fake_position_controller
+  ${PACKAGES_REQUIRED_HERE}
+  )
+target_link_libraries(omron_fake_position_controller
+  omron_forward_controller_parameters)
+
+target_compile_definitions(omron_fake_position_controller PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+
 ###########################
 ## Trajectory Controller ##
 ###########################
@@ -138,27 +163,37 @@ install(
   TARGETS omron_state_broadcaster
           omron_state_broadcaster_parameters
   EXPORT export_omron_state_broadcaster
-  RUNTIME DESTINATION bin/${PROJECT_NAME}
-  ARCHIVE DESTINATION lib/${PROJECT_NAME}
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   )
 
 install(
   TARGETS omron_forward_controller
           omron_forward_controller_parameters
   EXPORT export_omron_forward_controller
-  RUNTIME DESTINATION bin/${PROJECT_NAME}
-  ARCHIVE DESTINATION lib/${PROJECT_NAME}
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   )
+
+install(
+  TARGETS omron_fake_position_controller
+          # omron_forward_controller_parameters
+  EXPORT export_omron_forward_controller
+  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  )
+
 
 install(
   TARGETS omron_trajectory_controller
           omron_trajectory_controller_parameters
   EXPORT export_omron_trajectory_controller
-  RUNTIME DESTINATION bin/${PROJECT_NAME}
-  ARCHIVE DESTINATION lib/${PROJECT_NAME}
-  LIBRARY DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   )
 
 install(

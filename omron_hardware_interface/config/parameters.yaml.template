@@ -1,0 +1,5 @@
+omron_goal_client:
+  frame: base_link
+  map_frame: map
+  map: /map         #map topic
+  odom: /odom       #odom topic
