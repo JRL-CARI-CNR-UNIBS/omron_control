@@ -71,21 +71,6 @@ OmronStateBroadcaster::on_configure(const rclcpp_lifecycle::State & /*previous_s
                                  state_interface_names.end());
   state_interfaces_.reserve(m_state_interface_names.size());
 
-  m_static_tf_bcast = std::make_unique<tf2_ros::StaticTransformBroadcaster>(*(this->get_node()));
-  geometry_msgs::msg::TransformStamped tf_odom;
-  tf_odom.header.frame_id = m_params.tf.from;
-  tf_odom.child_frame_id = m_params.tf.odom;
-  tf_odom.header.stamp = /*rclcpp::Time(0,0);*/ this->get_node()->get_clock()->now();
-  tf_odom.transform.translation.x = 0.0;
-  tf_odom.transform.translation.y = 0.0;
-  tf_odom.transform.translation.z = 0.0;
-  tf_odom.transform.rotation.x = 0.0;
-  tf_odom.transform.rotation.y = 0.0;
-  tf_odom.transform.rotation.z = 0.0;
-  tf_odom.transform.rotation.w = 1.0;
-  m_static_tf_bcast->sendTransform(tf_odom);
-  this->get_node()->get_clock()->sleep_for(std::chrono_literals::operator""s(1));
-
   m_from_deg_to_rad = m_params.from_deg_to_rad? M_PI/180.0 : 1.0;
 
   return controller_interface::CallbackReturn::SUCCESS;
