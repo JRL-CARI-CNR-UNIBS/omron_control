@@ -33,7 +33,7 @@ private:
   std::vector<std::string> m_goals;
 
   // For gotoPose
-  std::string m_frame;
+  std::string m_base_frame;
   std::string m_map_frame;
 
   std::unique_ptr<tf2_ros::Buffer> m_tf_buffer;

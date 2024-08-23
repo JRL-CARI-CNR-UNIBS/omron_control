@@ -19,26 +19,26 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
 
   m_enable_goto_pose = true;
 
-  if(!this->get_parameter("frame", m_frame))
+  if(!this->get_parameter("base_frame", m_base_frame))
   {
-    RCLCPP_ERROR(this->get_logger(), "Missing 'frame' parameter, gotoPose() disabled");
+    RCLCPP_ERROR(this->get_logger(), "Missing 'base_frame' parameter, %s/goto_pose service disabled", this->get_name());
     m_enable_goto_pose = false;
   }
   if(!this->get_parameter("map_frame", m_map_frame))
   {
-    RCLCPP_ERROR(this->get_logger(), "Missing 'map_frame' parameter, gotoPose() disabled");
+    RCLCPP_ERROR(this->get_logger(), "Missing 'map_frame' parameter, %s/goto_pose service disabled", this->get_name());
     m_enable_goto_pose = false;
   }
   std::string map_topic;
   if(!this->get_parameter("map", map_topic))
   {
-    RCLCPP_ERROR(this->get_logger(), "Missing 'map' parameter, gotoPose() disabled");
+    RCLCPP_ERROR(this->get_logger(), "Missing 'map' parameter, %s/goto_pose service disabled", this->get_name());
     m_enable_goto_pose = false;
   }
   std::string odometry_topic;
   if(!this->get_parameter("odom", odometry_topic))
   {
-    RCLCPP_ERROR(this->get_logger(), "Missing 'odom' parameter, gotoPose() disabled");
+    RCLCPP_ERROR(this->get_logger(), "Missing 'odom' parameter, %s/goto_pose service disabled", this->get_name());
     m_enable_goto_pose = false;
   }
 
@@ -57,6 +57,8 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
     m_odom__sub = this->create_subscription<nav_msgs::msg::Odometry>(odometry_topic, 1, std::bind(&OmronGotoGoalClient::handle_odom_data__cb,
                                                                                              this,
                                                                                              std::placeholders::_1));
+
+    m_pose__srv = this->create_service<omron_msgs::srv::GotoPose>("goto_pose", std::bind(&OmronGotoGoalClient::go_to_pose__cb, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   m_goal_pose__pub = this->create_publisher<geometry_msgs::msg::PoseStamped>("omron_goal", 1);
@@ -134,31 +136,44 @@ void OmronGotoGoalClient::go_to_pose__cb(const omron_msgs::srv::GotoPose::Reques
     return;
   }
 
-  if(m_tf_buffer->canTransform(request->goal.header.frame_id, m_frame, tf2::TimePointZero, 1s))
+  if(m_tf_buffer->canTransform(request->goal.header.frame_id, m_base_frame, tf2::TimePointZero, 1s))
   {
-    RCLCPP_ERROR(this->get_logger(), "No transform from %s to %s found. Aborting.", request->goal.header.frame_id.c_str(), m_frame.c_str());
+    RCLCPP_ERROR(this->get_logger(), "No transform from %s to %s found. Aborting.", request->goal.header.frame_id.c_str(), m_base_frame.c_str());
     return;
   }
-  // WARNING: do per scontato che il frame ros e l'origine della mappa conincidano
-  Eigen::Affine3d goal_in_world;
-  tf2::fromMsg(request->goal.pose,goal_in_world);
-  geometry_msgs::msg::TransformStamped tf = m_tf_buffer->lookupTransform(request->goal.header.frame_id, m_frame, tf2::TimePointZero, 1s);
-  Eigen::Affine3d T_world_map;
-  T_world_map = tf2::transformToEigen(tf);
-  Eigen::Affine3d goal_in_map = T_world_map.inverse() * goal_in_world;
 
+  Eigen::Affine3d T_map_goal;
+  // WARNING: do per scontato che il frame ros e l'origine della mappa coincidano
+  if(request->from_frame == omron_msgs::srv::GotoPose::Request::FROM_WORLD)
+  {
+    Eigen::Affine3d T_world_goal;
+    tf2::fromMsg(request->goal.pose,T_world_goal);
+    geometry_msgs::msg::TransformStamped tf = m_tf_buffer->lookupTransform(request->goal.header.frame_id, m_map_frame, tf2::TimePointZero, 1s);
+    Eigen::Affine3d T_world_map;
+    T_world_map = tf2::transformToEigen(tf);
+    T_map_goal = T_world_map.inverse() * T_world_goal;
+  }
+  else if(request->from_frame == omron_msgs::srv::GotoPose::Request::FROM_MAP)
+  {
+    tf2::fromMsg(request->goal.pose, T_map_goal);
+  }
+  else
+  {
+    response->result = omron_msgs::srv::GotoPose::Response::FAILED;
+    return;
+  }
   // Publish pose to debug
   geometry_msgs::msg::PoseStamped goal_msg;
   goal_msg.header.stamp = this->get_clock()->now();
   goal_msg.header.frame_id = m_map_frame;
-  goal_msg.pose = tf2::toMsg(goal_in_map);
+  goal_msg.pose = tf2::toMsg(T_map_goal);
   m_goal_pose__pub->publish(goal_msg);
 
   ArNetPacket packet;
 
-  const ArTypes::Byte4 ar_x =  std::round(goal_in_map.translation()(0)/m_map_data.value().info.resolution * 1e3);
-  const ArTypes::Byte4 ar_y =  std::round(goal_in_map.translation()(1)/m_map_data.value().info.resolution * 1e3);
-  const ArTypes::Byte2 ar_th = std::round(Eigen::AngleAxisd(goal_in_map.linear()).angle()/m_map_data.value().info.resolution * 1e3);
+  const ArTypes::Byte4 ar_x =  std::round(T_map_goal.translation()(0)/m_map_data.value().info.resolution * 1e3);
+  const ArTypes::Byte4 ar_y =  std::round(T_map_goal.translation()(1)/m_map_data.value().info.resolution * 1e3);
+  const ArTypes::Byte2 ar_th = std::round(Eigen::AngleAxisd(T_map_goal.linear()).angle()/m_map_data.value().info.resolution * 1e3);
   packet.byte4ToBuf(ar_x);
   packet.byte4ToBuf(ar_y);
   packet.byte2ToBuf(ar_th);
