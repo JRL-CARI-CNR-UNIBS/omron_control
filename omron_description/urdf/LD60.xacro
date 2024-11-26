@@ -10,18 +10,11 @@
   <xacro:property name="base_y_size" value="0.55" />
   <xacro:property name="base_z_size" value="0.35" />
 
-  <xacro:macro name="LD60" params="prefix use_map">
+  <xacro:macro name="LD60" params="name">
   
     <!-- Base footprint is on the ground under the robot -->
-    <!-- <link name="${prefix}base_footprint">
-      <inertial>
-          <mass value="1000" />
-          <inertia ixx="0.001" ixy="0.01" ixz="0.01" iyy="0.001" iyz="0.01" izz="0.001" />
-      </inertial>
-    </link>   -->
-    <!-- Base link is the center of the robot's bottom plate -->
-    <!-- <link name="${prefix}base_link_omron"> -->
-    <link name="${prefix}base_link">
+    <link name="${name}mount_frame"/>
+    <link name="${name}base_footprint">
       <visual>
         <origin xyz="0 0 0.19" rpy="${M_PI/2} 0 ${M_PI/2}" />
         <geometry>
@@ -45,28 +38,11 @@
           <inertia ixx="1.48454" ixy="0.01" ixz="0.01" iyy="3.02861" iyz="0.01" izz="4.10178" />
       </inertial>
     </link>
-
-    <!-- <joint name="${prefix}base_footprint_joint" type="fixed">
-      <xacro:insert_block name="origin"/> 
-      <parent link="${prefix}base_link" />
-      <child link="${prefix}base_link_omron" />
-    </joint> -->
-
-    <xacro:if value="${use_map}">
-      <link name="${prefix}map"/>
-      <link name="${prefix}odom"/>
-      <joint name="map_to_odom" type="fixed">
-        <parent link="${prefix}map"/>
-        <child  link="${prefix}odom"/>
-        <!-- <axis xyz="0.0 0.0 1.0"/> -->
-      </joint>
-      <joint name="odom_to_base_link" type="planar">
-        <parent link="${prefix}odom"/>
-        <child  link="${prefix}base_link"/>
-        <axis xyz="0.0 0.0 1.0"/>
-      </joint>
-    </xacro:if>
-  
+    <joint name="${name}footprint_to_mount_joint" type="fixed">
+      <parent link="${name}base_footprint"/>
+      <child link="${name}mount_frame"/>
+      <origin xyz="0 0 0.38"/>
+    </joint>
 
   </xacro:macro>
 
