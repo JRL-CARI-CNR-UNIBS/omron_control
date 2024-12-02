@@ -12,7 +12,7 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
   : rclcpp::Node("omron_goal_client"),
     m_client(t_client)
 {
-  this->declare_parameter("frame", rclcpp::PARAMETER_STRING);
+  this->declare_parameter("base_frame", rclcpp::PARAMETER_STRING);
   this->declare_parameter("map_frame", rclcpp::PARAMETER_STRING);
   this->declare_parameter("map", rclcpp::PARAMETER_STRING);
   this->declare_parameter("odom", rclcpp::PARAMETER_STRING);
@@ -50,7 +50,7 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
                                                                           std::placeholders::_2));
   if(m_enable_goto_pose)
   {
-    m_map__sub = this->create_subscription<nav_msgs::msg::OccupancyGrid>(map_topic, 1, std::bind(&OmronGotoGoalClient::handle_map_data__cb,
+    m_map__sub = this->create_subscription<nav_msgs::msg::OccupancyGrid>(map_topic, rclcpp::QoS(1).transient_local(), std::bind(&OmronGotoGoalClient::handle_map_data__cb,
                                                                                           this,
                                                                                           std::placeholders::_1));
 
@@ -130,17 +130,16 @@ void OmronGotoGoalClient::go_to_pose__cb(const omron_msgs::srv::GotoPose::Reques
     RCLCPP_ERROR(this->get_logger(), "No map found. Aborting.");
     return;
   }
-  if(!m_odom_data.has_value())
-  {
-    RCLCPP_ERROR(this->get_logger(), "No odometry msg received. Aborting.");
-    return;
-  }
+//if(!m_odom_data.has_value())  {
+//   RCLCPP_ERROR(this->get_logger(), "No odometry msg received. Aborting.");
+//   return;
+// }
 
-  if(m_tf_buffer->canTransform(request->goal.header.frame_id, m_base_frame, tf2::TimePointZero, 1s))
-  {
-    RCLCPP_ERROR(this->get_logger(), "No transform from %s to %s found. Aborting.", request->goal.header.frame_id.c_str(), m_base_frame.c_str());
-    return;
-  }
+//  if(m_tf_buffer->canTransform(request->goal.header.frame_id, m_base_frame, tf2::TimePointZero, 1s))
+//  {
+//    RCLCPP_ERROR(this->get_logger(), "No transform from %s to %s found. Aborting.", request->goal.header.frame_id.c_str(), m_base_frame.c_str());
+//    return;
+//  }
 
   Eigen::Affine3d T_map_goal;
   // WARNING: do per scontato che il frame ros e l'origine della mappa coincidano
@@ -214,10 +213,10 @@ void OmronGotoGoalClient::go_to_pose__cb(const omron_msgs::srv::GotoPose::Reques
 
 void OmronGotoGoalClient::handle_map_data__cb(const nav_msgs::msg::OccupancyGrid& msg)
 {
-  m_map_data.value() = msg;
+  m_map_data = std::make_optional(msg);
 }
 
 void OmronGotoGoalClient::handle_odom_data__cb(const nav_msgs::msg::Odometry &msg)
 {
-  m_odom_data.value() = msg;
+  m_odom_data = std::make_optional(msg);
 }

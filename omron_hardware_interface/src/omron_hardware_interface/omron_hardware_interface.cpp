@@ -139,7 +139,7 @@ OmronAria::export_command_interfaces()
   );
   if (velocity_interface__itor == info_.gpios.end())
   {
-    RCLCPP_FATAL(m_logger, "No. Exporting no state interface.");
+    RCLCPP_FATAL(m_logger, "No. Exporting no command interfaces.");
     return command_interfaces;
   }
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
