@@ -7,10 +7,18 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/executors.hpp>
 
+#include <regex>
+
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   Aria::init();
+
+	if(not std::regex_match(argv[1], std::regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$")))
+  {
+    std::cerr << "Argument is not an IP" << std::endl;
+    exit(-2);
+  }
 
   ArClientBase ar_client;
   ar_client.enforceProtocolVersion("5MTX");
@@ -18,7 +26,7 @@ int main(int argc, char** argv)
   ArArgumentBuilder args;
 
   args.addPlain("-host");
-  args.addPlain("192.168.1.32");  //Default IP
+  args.addPlain(argv[1]);  //Default IP
 
   //PORT
   args.addPlain("-p");

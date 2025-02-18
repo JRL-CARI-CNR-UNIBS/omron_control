@@ -1,7 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:macro name="omron_aria" params="name 
-                                           use_fake_hardware">
+                                           use_fake_hardware
+                                           ip_address:=1.2.3.4
+                                           port:=7272
+                                           user:=admin
+                                           prefix:=omron_base">
 <!--      <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)['initial_positions']}"/>-->
 
       <ros2_control name="${name}" type="system">
@@ -15,10 +19,10 @@
           <hardware>
             <plugin>omron/OmronAria</plugin>
             <param name="update_frequency">500</param>
-            <param name="prefix">omron_base</param>
-            <param name="ip_address">192.168.1.32</param>
-            <param name="port">7272</param>
-            <param name="user">admin</param>
+            <param name="prefix">${prefix}</param>
+            <param name="ip_address">${ip_address}</param>
+            <param name="port">${port}</param>
+            <param name="user">${user}</param>
             <param name="max_linear_vel">0.5</param> <!-- m/s -->
             <param name="max_angular_vel">30.0</param> <!-- rad/s -->
 <!--              <param name="password"></param>-->

@@ -194,7 +194,7 @@ namespace omron {
 //    reference[1] = std::fabs(reference[1]) > 0.01? reference[1] : 0.0; // rad/s
     command_interfaces_.at(0).set_value(reference[0]);
     command_interfaces_.at(1).set_value(reference[1]);
-
+//		RCLCPP_INFO_STREAM(get_node()->get_logger(), "Previous Loop Duration: " << duration.seconds());
     return controller_interface::return_type::OK;
   }
 
