@@ -18,7 +18,7 @@
       <visual>
         <origin xyz="0 0 0.19" rpy="${M_PI/2} 0 ${M_PI/2}" />
         <geometry>
-          <mesh filename="file://$(find omron_description)//mesh/LD60.stl"/>
+          <mesh filename="package://omron_description/mesh/LD60.stl"/>
         </geometry>
         <material name="Gray">
           <color rgba="0.5 0.5 0.5 1.0" />
@@ -27,7 +27,7 @@
       <collision>
         <origin xyz="0 0 0.19" rpy="${M_PI/2} 0 ${M_PI/2}" />
         <geometry>
-          <mesh filename="file://$(find omron_description)//mesh/LD60.stl"/>
+          <mesh filename="package://omron_description/mesh/LD60.stl"/>
         </geometry>
         <material name="Gray">
           <color rgba="0.5 0.5 0.5 1.0" />
