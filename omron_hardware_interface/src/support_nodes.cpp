@@ -14,7 +14,7 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
   Aria::init();
 
-	if(not std::regex_match(argv[1], std::regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$")))
+  if(not std::regex_match(argv[1], std::regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$")))
   {
     std::cerr << "Argument is not an IP" << std::endl;
     exit(-2);

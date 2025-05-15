@@ -3,13 +3,30 @@
 OmronLaserClient::OmronLaserClient(ArClientBase *client, std::string laser_name, std::string topic):
   Node("omron_laser_client"),
   m_client(client),
-  m_ar_laser__ftor(this, &OmronLaserClient::laser__cb)
+  m_ar_laser__ftor(this, &OmronLaserClient::laser__cb),
+  m_ar_pose__ftor(this, &OmronLaserClient::pose__cb),
+  m_pose_handler_name("updateNumbers")
 {
+  this->declare_parameter("base_footprint_frame",rclcpp::ParameterValue("base_footprint"));
+  m_base_frame = this->get_parameter("base_footprint_frame").as_string();
+
   m_laser__pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic, rclcpp::SensorDataQoS());
   m_client->addHandler(laser_name.c_str(), &m_ar_laser__ftor);
+  m_client->addHandler(laser_name.c_str(), &m_ar_pose__ftor);
   m_client->request(laser_name.c_str(), 100);
+  m_client->request(m_pose_handler_name.c_str(), 100);
 
   RCLCPP_WARN(this->get_logger(),"Setup Callback for %s publishing on %s",laser_name.c_str(), topic.c_str());
+}
+
+void OmronLaserClient::pose__cb(ArNetPacket *packet)
+{
+  packet->bufToByte2(); // Discard battery voltage
+  m_T_map_base.translation().x() =            (  (double) packet->bufToByte4() )/1000.0;
+  m_T_map_base.translation().y() =            (  (double) packet->bufToByte4() )/1000.0;
+//  Eigen::AngleAxisd aax((double) packet->bufToByte2(), Eigen::Vector3d::UnitZ()); // float?
+  Eigen::Rotation2D rot((double) packet->bufToByte2());
+  m_T_map_base.linear() = rot.toRotationMatrix();
 }
 
 void OmronLaserClient::laser__cb(ArNetPacket *packet)
@@ -18,9 +35,8 @@ void OmronLaserClient::laser__cb(ArNetPacket *packet)
 
   actual_scan.header.stamp = this->get_clock()->now();
   // actual_scan.header.m_seq = m_seq++;
-  actual_scan.header.frame_id = "map";
+  actual_scan.header.frame_id = m_base_frame;
 
-  int x, y;
   int numReadings;
   int i;
 
@@ -52,16 +68,19 @@ void OmronLaserClient::laser__cb(ArNetPacket *packet)
     return;
   }
 
+  Eigen::Affine2d T_map_scan, T_base_scan;
   for (i = 0; i < numReadings; i++)
   {
-    x = packet->bufToByte4();
-    y = packet->bufToByte4();
+    T_map_scan.translation().x() = (double)packet->bufToByte4();
+    T_map_scan.translation().y() = (double)packet->bufToByte4();
 
     float *pstep = (float*)&actual_scan.data[i * actual_scan.point_step];
 
-    pstep[0] = x/1000.0;
-    pstep[1] = y/1000.0;
-    pstep[2] = 0;
+    T_base_scan = m_T_map_base.inverse() * T_map_scan;
+
+    pstep[0] = T_base_scan.translation().x()/1000.0;
+    pstep[1] = T_base_scan.translation().y()/1000.0;
+    pstep[2] = 0.3; // Height of the lidar
   }
 
   m_laser__pub->publish(actual_scan);
