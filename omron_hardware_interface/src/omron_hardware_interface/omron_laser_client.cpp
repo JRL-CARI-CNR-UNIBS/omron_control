@@ -12,7 +12,7 @@ OmronLaserClient::OmronLaserClient(ArClientBase *client, std::string laser_name,
 
   m_laser__pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic, rclcpp::SensorDataQoS());
   m_client->addHandler(laser_name.c_str(), &m_ar_laser__ftor);
-  m_client->addHandler(laser_name.c_str(), &m_ar_pose__ftor);
+  m_client->addHandler(m_pose_handler_name.c_str(), &m_ar_pose__ftor);
   m_client->request(laser_name.c_str(), 100);
   m_client->request(m_pose_handler_name.c_str(), 100);
 
