@@ -22,8 +22,8 @@ OmronLaserClient::OmronLaserClient(ArClientBase *client, std::string laser_name,
 void OmronLaserClient::pose__cb(ArNetPacket *packet)
 {
   packet->bufToByte2(); // Discard battery voltage
-  m_T_map_base.translation().x() =            (  (double) packet->bufToByte4() )/1000.0;
-  m_T_map_base.translation().y() =            (  (double) packet->bufToByte4() )/1000.0;
+  m_T_map_base.translation()(0) =            (  (double) packet->bufToByte4() )/1000.0;
+  m_T_map_base.translation()(1) =            (  (double) packet->bufToByte4() )/1000.0;
 //  Eigen::AngleAxisd aax((double) packet->bufToByte2(), Eigen::Vector3d::UnitZ()); // float?
   Eigen::Rotation2D rot((double) (packet->bufToByte2()) * M_PI/180.0);
   m_T_map_base.linear() = rot.toRotationMatrix();
@@ -71,15 +71,15 @@ void OmronLaserClient::laser__cb(ArNetPacket *packet)
   Eigen::Affine2d T_map_scan, T_base_scan;
   for (i = 0; i < numReadings; i++)
   {
-    T_map_scan.translation().x() = (double)packet->bufToByte4();
-    T_map_scan.translation().y() = (double)packet->bufToByte4();
+    T_map_scan.translation()(0) = (double)packet->bufToByte4();
+    T_map_scan.translation()(1) = (double)packet->bufToByte4();
 
     float *pstep = (float*)&actual_scan.data[i * actual_scan.point_step];
 
     T_base_scan = m_T_map_base.inverse() * T_map_scan;
 
-    pstep[0] = T_base_scan.translation().x()/1000.0;
-    pstep[1] = T_base_scan.translation().y()/1000.0;
+    pstep[0] = T_base_scan.translation()(0)/1000.0;
+    pstep[1] = T_base_scan.translation()(1)/1000.0;
     pstep[2] = 0.3; // Height of the lidar
   }
 
