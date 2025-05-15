@@ -25,7 +25,7 @@ void OmronLaserClient::pose__cb(ArNetPacket *packet)
   m_T_map_base.translation().x() =            (  (double) packet->bufToByte4() )/1000.0;
   m_T_map_base.translation().y() =            (  (double) packet->bufToByte4() )/1000.0;
 //  Eigen::AngleAxisd aax((double) packet->bufToByte2(), Eigen::Vector3d::UnitZ()); // float?
-  Eigen::Rotation2D rot((double) packet->bufToByte2());
+  Eigen::Rotation2D rot((double) (packet->bufToByte2()) * M_PI/180.0);
   m_T_map_base.linear() = rot.toRotationMatrix();
 }
 
