@@ -87,10 +87,12 @@ add_executable(omron_support_nodes
   src/${PROJECT_NAME}/omron_map_client.cpp
   src/${PROJECT_NAME}/omron_laser_client.cpp
   src/${PROJECT_NAME}/omron_goto_goal_client.cpp
+  src/${PROJECT_NAME}/omron_goto_goal_server.cpp
   # Only for IDE
   include/${PROJECT_NAME}/omron_map_client.hpp
   include/${PROJECT_NAME}/omron_laser_client.hpp
   include/${PROJECT_NAME}/omron_goto_goal_client.hpp
+  include/${PROJECT_NAME}/omron_goto_goal_server.hpp
   )
 ament_target_dependencies(omron_support_nodes
   ${SUPPORT_NODES_REQUIRED}
