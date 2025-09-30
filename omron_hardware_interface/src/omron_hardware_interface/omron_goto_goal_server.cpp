@@ -174,9 +174,6 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
               Eigen::Quaterniond(T_map_goal.linear()).z(),
               Eigen::Quaterniond(T_map_goal.linear()).w());
 
-  m_ar_client_update.requestUpdates(20);
-  sleep_for_async(std::chrono::nanoseconds(1s));
-
   ArNetPacket packet;
 
   const ArTypes::Byte4 ar_x =  std::round(T_map_goal.translation()(0)/m_map_data.value().info.resolution * 1e3);
@@ -187,6 +184,9 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   packet.byte2ToBuf(ar_th);
 
   m_ar_client->requestOnce("gotoPose", &packet);
+  m_ar_client_update.requestUpdates(20);
+  sleep_for_async(std::chrono::nanoseconds(1s));
+
   std::string mode, status;
   while(m_ar_client->getRunningWithLock())
   {
