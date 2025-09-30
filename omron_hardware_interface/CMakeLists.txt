@@ -10,6 +10,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(angles REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -29,7 +30,8 @@ set(SUPPORT_NODES_REQUIRED
   nav_msgs
   sensor_msgs
   omron_msgs
-  geometry_msgs)
+  geometry_msgs
+  angles)
 
 foreach(package IN ITEMS ${PACKAGES_REQUIRED_HERE})
   find_package(${package} REQUIRED)

@@ -10,6 +10,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <angles/angles.h>
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
 #include <nav_msgs/msg/odometry.hpp>
