@@ -134,7 +134,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
 
   Eigen::Affine3d T_world_goal, T_world_map, T_map_goal;
 
-  tf2::fromMsg(goal->goal.pose,T_map_goal);
+  tf2::fromMsg(goal->goal.pose,T_world_goal);
 
   auto start_time = this->now();
   while(not(m_tf_buffer->canTransform(goal->goal.header.frame_id, m_map_frame, tf2::TimePointZero, 1s)) 
