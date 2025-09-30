@@ -35,12 +35,12 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
     RCLCPP_ERROR(this->get_logger(), "Missing 'map' parameter, %s/goto_pose service disabled", this->get_name());
     m_enable_goto_pose = false;
   }
-  std::string odometry_topic;
-  if(!this->get_parameter("odom", odometry_topic))
-  {
-    RCLCPP_ERROR(this->get_logger(), "Missing 'odom' parameter, %s/goto_pose service disabled", this->get_name());
-    m_enable_goto_pose = false;
-  }
+  // std::string odometry_topic;
+  // if(!this->get_parameter("odom", odometry_topic))
+  // {
+  //   RCLCPP_ERROR(this->get_logger(), "Missing 'odom' parameter, %s/goto_pose service disabled", this->get_name());
+  //   m_enable_goto_pose = false;
+  // }
 
 
   m_goal__srv = this->create_service<omron_msgs::srv::GotoGoal>("goto_goal",
@@ -54,9 +54,9 @@ OmronGotoGoalClient::OmronGotoGoalClient(ArClientBase* t_client)
                                                                                           this,
                                                                                           std::placeholders::_1));
 
-    m_odom__sub = this->create_subscription<nav_msgs::msg::Odometry>(odometry_topic, 1, std::bind(&OmronGotoGoalClient::handle_odom_data__cb,
-                                                                                             this,
-                                                                                             std::placeholders::_1));
+    // m_odom__sub = this->create_subscription<nav_msgs::msg::Odometry>(odometry_topic, 1, std::bind(&OmronGotoGoalClient::handle_odom_data__cb,
+                                                                                            //  this,
+                                                                                            //  std::placeholders::_1));
 
     m_pose__srv = this->create_service<omron_msgs::srv::GotoPose>("goto_pose", std::bind(&OmronGotoGoalClient::go_to_pose__cb, this, std::placeholders::_1, std::placeholders::_2));
   }
@@ -89,29 +89,20 @@ void OmronGotoGoalClient::go_to_goal__cb(const omron_msgs::srv::GotoGoal::Reques
     ar_client_update.lock();
     mode = ar_client_update.getMode();
     status = ar_client_update.getStatus();
-    RCLCPP_DEBUG_STREAM(this->get_logger(), "Mode: " << ar_client_update.getMode() << "\n" <<
+    RCLCPP_WARN_STREAM(this->get_logger(), "Mode: " << ar_client_update.getMode() << "\n" <<
                                             "Status: " << ar_client_update.getStatus());
-    if(mode == "Goal seeking")
+    if(status[0] == 'A')
     {
-      if(status == "Arrived at " + request->goal)
-      {
-        RCLCPP_INFO_STREAM(this->get_logger(), "Arrived at " << request->goal);
-        break;
-      }
-      else if(status == "Going to " + request->goal)
-      {
-        // In corso
-      }
-      else
-      {
-        RCLCPP_ERROR(this->get_logger(), "Something went wrong");
-        response->result = omron_msgs::srv::GotoGoal::Response::FAILED;
-        return;
-      }
+      RCLCPP_INFO_STREAM(this->get_logger(), "Arrived at Goal");
+      break;
+    }
+    else if(status[0] == 'G')
+    {
+      // In corso
     }
     else
     {
-      RCLCPP_ERROR(this->get_logger(), "Goal request rejected");
+      RCLCPP_ERROR(this->get_logger(), "Something went wrong");
       response->result = omron_msgs::srv::GotoGoal::Response::FAILED;
       return;
     }

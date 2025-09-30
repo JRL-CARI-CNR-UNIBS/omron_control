@@ -7,7 +7,7 @@ OmronLaserClient::OmronLaserClient(ArClientBase *client, std::string laser_name,
   m_ar_pose__ftor(this, &OmronLaserClient::pose__cb),
   m_pose_handler_name("updateNumbers")
 {
-  this->declare_parameter("base_footprint_frame",rclcpp::ParameterValue("base_footprint"));
+  this->declare_parameter("base_footprint_frame",rclcpp::ParameterValue("omron/base_footprint"));
   m_base_frame = this->get_parameter("base_footprint_frame").as_string();
 
   m_laser__pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic, rclcpp::SensorDataQoS());

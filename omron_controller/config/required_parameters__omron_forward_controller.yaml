@@ -21,6 +21,14 @@ omron_controller:
       not_empty<>: null
     }
   }
+  timeout: {
+    type: double,
+    default_value: 0.5,
+    description: "Timeout to stop the robot if no cmd_vel is received",
+    validation: {
+      gt_eq<>: 0.0
+    }
+  }
   tf:
     use_tf: {
       type: bool,

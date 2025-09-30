@@ -192,6 +192,7 @@ namespace omron {
     reference[1] = reference_interfaces_.at(1);
 //    reference[0] = std::fabs(reference[0]) > 0.01? reference[0] : 0.0; // m/s
 //    reference[1] = std::fabs(reference[1]) > 0.01? reference[1] : 0.0; // rad/s
+
     command_interfaces_.at(0).set_value(reference[0]);
     command_interfaces_.at(1).set_value(reference[1]);
 //		RCLCPP_INFO_STREAM(get_node()->get_logger(), "Previous Loop Duration: " << duration.seconds());
@@ -230,8 +231,8 @@ namespace omron {
     }
     else
     {
-      RCLCPP_ERROR_THROTTLE(this->get_node()->get_logger(), *(this->get_node()->get_clock()), 1000, "Cannot receive Twist message");
-      return controller_interface::return_type::ERROR;
+      reference_interfaces_.at(0) = 0.0;
+      reference_interfaces_.at(1) = 0.0;
     }
     return controller_interface::return_type::OK;
   }
