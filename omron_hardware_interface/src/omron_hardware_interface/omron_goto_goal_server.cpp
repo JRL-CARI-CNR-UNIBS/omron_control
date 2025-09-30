@@ -120,8 +120,6 @@ void
 OmronGotoGoalServer::handle_accepted(
   const std::shared_ptr<GoalHandleGotoGoalAction> goal_handle)
 {
-  m_ar_client_update.requestUpdates(20);
-
 
   std::thread{std::bind(&OmronGotoGoalServer::execute_goto, this, std::placeholders::_1), goal_handle}.detach();
 }
@@ -134,7 +132,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   auto feedback = std::make_shared<GotoGoalAction::Feedback>();
   auto result = std::make_shared<GotoGoalAction::Result>();
   
-  m_ar_client_update.requestUpdates(20);
+  ar_client_update.requestUpdates(20);
   sleep_for_async(std::chrono::nanoseconds(100ms));
 
   Eigen::Affine3d T_world_goal, T_world_map, T_map_goal;
@@ -143,8 +141,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
 
   auto start_time = this->now();
   while(not(m_tf_buffer->canTransform(goal->goal.header.frame_id, m_map_frame, tf2::TimePointZero, 1s)) 
-        and (this->now() - start_time) < rclcpp::Duration(3s))
-  {
+        and (this->now() - start_time) < rclcpp::Duration(3s)) {
     RCLCPP_WARN(this->get_logger(), "Waiting for transform from %s to %s", goal->goal.header.frame_id.c_str(), m_map_frame.c_str());
     if(goal_handle->is_canceling()) {
       result->result = GotoGoalAction::Result::GOING_TO;
@@ -171,11 +168,51 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
 
   T_map_goal = T_world_map.inverse() * T_world_goal;
 
-  m_ar_client_update.stopUpdates();
+  ArNetPacket packet;
 
-  result->result = GotoGoalAction::Result::ARRIVED;
-  goal_handle->succeed(result);
-  RCLCPP_INFO(this->get_logger(), "Goal succeeded");
+  const ArTypes::Byte4 ar_x =  std::round(T_map_goal.translation()(0)/m_map_data.value().info.resolution * 1e3);
+  const ArTypes::Byte4 ar_y =  std::round(T_map_goal.translation()(1)/m_map_data.value().info.resolution * 1e3);
+  const ArTypes::Byte2 ar_th = std::round(Eigen::AngleAxisd(T_map_goal.linear()).angle()/m_map_data.value().info.resolution * 1e3);
+  packet.byte4ToBuf(ar_x);
+  packet.byte4ToBuf(ar_y);
+  packet.byte2ToBuf(ar_th);
+
+  m_client->requestOnce("gotoPose", &packet);
+  while(m_client->getRunningWithLock())
+  {
+    ar_client_update.lock();
+    mode = ar_client_update.getMode();
+    status = ar_client_update.getStatus();
+    RCLCPP_DEBUG_STREAM(this->get_logger(), "Mode: " << ar_client_update.getMode() << "\n" <<
+                                            "Status: " << ar_client_update.getStatus());
+
+    if(status[0] == 'A')
+    {
+      RCLCPP_INFO_STREAM(this->get_logger(), "Arrived at Goal");
+      result->result = GotoGoalAction::Result::ARRIVED;
+      goal_handle->succeed(result);
+      break;
+    }
+    else if(status[0] == 'G')
+    {
+      // Going to goal
+      feedback->current_status = GotoGoalAction::Feedback::GOING_TO;
+      goal_handle->publish_feedback(feedback);
+    }
+    else
+    {
+      RCLCPP_ERROR(this->get_logger(), "Something went wrong");
+      result->result = GotoGoalAction::Result::FAILED;
+      goal_handle->abort(result);
+      break;
+    }
+    ar_client_update.unlock();
+  }
+
+  m_ar_client_update.stopUpdates();
+  // result->result = GotoGoalAction::Result::ARRIVED;
+  // goal_handle->succeed(result);
+  // RCLCPP_INFO(this->get_logger(), "Goal succeeded");
 }
 
 
