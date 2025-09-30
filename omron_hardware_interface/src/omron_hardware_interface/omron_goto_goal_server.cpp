@@ -140,7 +140,28 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   Eigen::Affine3d T_world_goal, T_world_map, T_map_goal;
 
   tf2::fromMsg(goal->goal.pose,T_map_goal);
-  geometry_msgs::msg::TransformStamped tf_world_map = m_tf_buffer->lookupTransform(goal->goal.header.frame_id, m_map_frame, tf2::TimePointZero, 1s);
+
+  auto start_time = this->now();
+  while(not(m_tf_buffer->canTransform(goal->goal.header.frame_id, m_map_frame, tf2::TimePointZero, 1s)) 
+        and (this->now() - start_time) < rclcpp::Duration(3s))
+  {
+    RCLCPP_WARN(this->get_logger(), "Waiting for transform from %s to %s", goal->goal.header.frame_id.c_str(), m_map_frame.c_str());
+    if(goal_handle->is_canceling()) {
+      result->result = GotoGoalAction::Result::GOING_TO;
+      goal_handle->canceled(result);
+      RCLCPP_INFO(this->get_logger(), "Goal canceled");
+      m_ar_client_update.stopUpdates();
+      return;
+    }
+  }
+  geometry_msgs::msg::TransformStamped tf_world_map;
+  try{
+    tf_world_map = m_tf_buffer->lookupTransform(goal->goal.header.frame_id, m_map_frame, tf2::TimePointZero, 1s);
+  }
+  catch (tf2::TransformException& ex) {
+    RCLCPP_ERROR(this->get_logger(), "Transform not available: %s", ex.what());
+    return;
+  }
   T_world_map = tf2::transformToEigen(tf_world_map);
   RCLCPP_INFO(this->get_logger(), "Transform from %s to %s found.", goal->goal.header.frame_id.c_str(), m_map_frame.c_str());
   RCLCPP_INFO(this->get_logger(), "Transform from %s to %s : x: %f, y: %f, z: %f", goal->goal.header.frame_id.c_str(), m_map_frame.c_str(),
@@ -152,6 +173,9 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
 
   m_ar_client_update.stopUpdates();
 
+  result->result = GotoGoalAction::Result::ARRIVED;
+  goal_handle->succeed(result);
+  RCLCPP_INFO(this->get_logger(), "Goal succeeded");
 }
 
 
