@@ -183,9 +183,9 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   packet.byte4ToBuf(ar_y);
   packet.byte2ToBuf(ar_th);
 
-  m_ar_client->requestOnce("gotoPose", &packet);
   m_ar_client_update.requestUpdates(20);
   sleep_for_async(std::chrono::nanoseconds(1s));
+  m_ar_client->requestOnce("gotoPose", &packet);
 
   std::string mode, status;
   while(m_ar_client->getRunningWithLock())
@@ -214,6 +214,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
       RCLCPP_ERROR(this->get_logger(), "Something went wrong");
       result->result = GotoGoalAction::Result::FAILED;
       goal_handle->abort(result);
+      m_ar_client_update.unlock();
       break;
     }
     m_ar_client_update.unlock();
@@ -225,88 +226,6 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   // goal_handle->succeed(result);
   // RCLCPP_INFO(this->get_logger(), "Goal succeeded");
 }
-
-
-// void OmronGotoGoalServer::go_to_pose__cb(const omron_msgs::srv::GotoPose::Request::SharedPtr request, omron_msgs::srv::GotoPose::Response::SharedPtr response)
-// {
-//   ArClientHandlerRobotUpdate ar_client_update(m_ar_client);
-
-//   if(!m_map_data.has_value())
-//   {
-//     RCLCPP_ERROR(this->get_logger(), "No map found. Aborting.");
-//     return;
-//   }
-
-
-//   Eigen::Affine3d T_map_goal;
-//   // WARNING: do per scontato che il frame ros e l'origine della mappa coincidano
-//   if(request->from_frame == omron_msgs::srv::GotoPose::Request::FROM_WORLD)
-//   {
-//     Eigen::Affine3d T_world_goal;
-//     tf2::fromMsg(request->goal.pose,T_world_goal);
-//     geometry_msgs::msg::TransformStamped tf = m_tf_buffer->lookupTransform(request->goal.header.frame_id, m_map_frame, tf2::TimePointZero, 1s);
-//     Eigen::Affine3d T_world_map;
-//     T_world_map = tf2::transformToEigen(tf);
-//     T_map_goal = T_world_map.inverse() * T_world_goal;
-//   }
-//   else if(request->from_frame == omron_msgs::srv::GotoPose::Request::FROM_MAP)
-//   {
-//     tf2::fromMsg(request->goal.pose, T_map_goal);
-//   }
-//   else
-//   {
-//     response->result = omron_msgs::srv::GotoPose::Response::FAILED;
-//     return;
-//   }
-//   // Publish pose to debug
-//   geometry_msgs::msg::PoseStamped goal_msg;
-//   goal_msg.header.stamp = this->get_clock()->now();
-//   goal_msg.header.frame_id = m_map_frame;
-//   goal_msg.pose = tf2::toMsg(T_map_goal);
-//   m_goal_pose__pub->publish(goal_msg);
-
-//   ArNetPacket packet;
-
-//   const ArTypes::Byte4 ar_x =  std::round(T_map_goal.translation()(0)/m_map_data.value().info.resolution * 1e3);
-//   const ArTypes::Byte4 ar_y =  std::round(T_map_goal.translation()(1)/m_map_data.value().info.resolution * 1e3);
-//   const ArTypes::Byte2 ar_th = std::round(Eigen::AngleAxisd(T_map_goal.linear()).angle()/m_map_data.value().info.resolution * 1e3);
-//   packet.byte4ToBuf(ar_x);
-//   packet.byte4ToBuf(ar_y);
-//   packet.byte2ToBuf(ar_th);
-
-//   m_ar_client->requestOnce("gotoPose", &packet);
-//   ar_client_update.requestUpdates(20);
-//   this->get_clock()->sleep_for(1s);
-//   std::string mode, status;
-//   while(m_ar_client->getRunningWithLock())
-//   {
-//     ar_client_update.lock();
-//     mode = ar_client_update.getMode();
-//     status = ar_client_update.getStatus();
-//     RCLCPP_DEBUG_STREAM(this->get_logger(), "Mode: " << ar_client_update.getMode() << "\n" <<
-//                                             "Status: " << ar_client_update.getStatus());
-
-//     if(status[0] == 'A')
-//     {
-//       RCLCPP_INFO_STREAM(this->get_logger(), "Arrived at Goal");
-//       break;
-//     }
-//     else if(status[0] == 'G')
-//     {
-//       // In corso
-//     }
-//     else
-//     {
-//       RCLCPP_ERROR(this->get_logger(), "Something went wrong");
-//       response->result = omron_msgs::srv::GotoGoal::Response::FAILED;
-//       return;
-//     }
-
-//     ar_client_update.unlock();
-//     this->get_clock()->sleep_for(50ms);
-//   }
-//   response->result = omron_msgs::srv::GotoGoal::Response::ARRIVED;
-// }
 
 void OmronGotoGoalServer::handle_map_data__cb(const nav_msgs::msg::OccupancyGrid& msg)
 {
