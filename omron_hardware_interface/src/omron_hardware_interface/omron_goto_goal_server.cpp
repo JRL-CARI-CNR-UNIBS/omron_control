@@ -177,14 +177,15 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   packet.byte4ToBuf(ar_y);
   packet.byte2ToBuf(ar_th);
 
-  m_client->requestOnce("gotoPose", &packet);
-  while(m_client->getRunningWithLock())
+  m_ar_client->requestOnce("gotoPose", &packet);
+  std::string mode, status;
+  while(m_ar_client->getRunningWithLock())
   {
-    ar_client_update.lock();
-    mode = ar_client_update.getMode();
-    status = ar_client_update.getStatus();
-    RCLCPP_DEBUG_STREAM(this->get_logger(), "Mode: " << ar_client_update.getMode() << "\n" <<
-                                            "Status: " << ar_client_update.getStatus());
+    m_ar_client_update.lock();
+    mode = m_ar_client_update.getMode();
+    status = m_ar_client_update.getStatus();
+    RCLCPP_DEBUG_STREAM(this->get_logger(), "Mode: " << m_ar_client_update.getMode() << "\n" <<
+                                            "Status: " << m_ar_client_update.getStatus());
 
     if(status[0] == 'A')
     {
@@ -196,7 +197,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
     else if(status[0] == 'G')
     {
       // Going to goal
-      feedback->current_status = GotoGoalAction::Feedback::GOING_TO;
+      feedback->status = GotoGoalAction::Result::GOING_TO;
       goal_handle->publish_feedback(feedback);
     }
     else
@@ -206,7 +207,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
       goal_handle->abort(result);
       break;
     }
-    ar_client_update.unlock();
+    m_ar_client_update.unlock();
   }
 
   m_ar_client_update.stopUpdates();
