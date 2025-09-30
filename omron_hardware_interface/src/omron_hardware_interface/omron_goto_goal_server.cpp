@@ -201,6 +201,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
       RCLCPP_INFO_STREAM(this->get_logger(), "Arrived at Goal");
       result->result = GotoGoalAction::Result::ARRIVED;
       goal_handle->succeed(result);
+      m_ar_client_update.unlock();
       break;
     }
     else if(status[0] == 'G')
