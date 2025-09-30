@@ -131,9 +131,6 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   const auto goal = goal_handle->get_goal();
   auto feedback = std::make_shared<GotoGoalAction::Feedback>();
   auto result = std::make_shared<GotoGoalAction::Result>();
-  
-  m_ar_client_update.requestUpdates(20);
-  sleep_for_async(std::chrono::nanoseconds(100ms));
 
   Eigen::Affine3d T_world_goal, T_world_map, T_map_goal;
 
@@ -147,7 +144,6 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
       result->result = GotoGoalAction::Result::GOING_TO;
       goal_handle->canceled(result);
       RCLCPP_INFO(this->get_logger(), "Goal canceled");
-      m_ar_client_update.stopUpdates();
       return;
     }
   }
@@ -157,6 +153,8 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   }
   catch (tf2::TransformException& ex) {
     RCLCPP_ERROR(this->get_logger(), "Transform not available: %s", ex.what());
+    result->result = GotoGoalAction::Result::FAILED;
+    goal_handle->abort(result);
     return;
   }
   T_world_map = tf2::transformToEigen(tf_world_map);
@@ -167,6 +165,9 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
               T_world_map.translation()(2));
 
   T_map_goal = T_world_map.inverse() * T_world_goal;
+
+  m_ar_client_update.requestUpdates(20);
+  sleep_for_async(std::chrono::nanoseconds(1s));
 
   ArNetPacket packet;
 
@@ -208,6 +209,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
       break;
     }
     m_ar_client_update.unlock();
+    sleep_for_async(std::chrono::nanoseconds(50ms));
   }
 
   m_ar_client_update.stopUpdates();
