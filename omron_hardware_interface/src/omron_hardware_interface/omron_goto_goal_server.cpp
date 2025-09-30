@@ -132,7 +132,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   auto feedback = std::make_shared<GotoGoalAction::Feedback>();
   auto result = std::make_shared<GotoGoalAction::Result>();
   
-  ar_client_update.requestUpdates(20);
+  m_ar_client_update.requestUpdates(20);
   sleep_for_async(std::chrono::nanoseconds(100ms));
 
   Eigen::Affine3d T_world_goal, T_world_map, T_map_goal;
