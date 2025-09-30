@@ -165,6 +165,14 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
               T_world_map.translation()(2));
 
   T_map_goal = T_world_map.inverse() * T_world_goal;
+  RCLCPP_INFO(this->get_logger(), "Goal in %s frame: x: %f, y: %f, z: %f, qx: %f, qy: %f, qz: %f, qw: %f", m_map_frame.c_str(),
+              T_map_goal.translation()(0),
+              T_map_goal.translation()(1),
+              T_map_goal.translation()(2),
+              Eigen::Quaterniond(T_map_goal.linear()).x(),
+              Eigen::Quaterniond(T_map_goal.linear()).y(),
+              Eigen::Quaterniond(T_map_goal.linear()).z(),
+              Eigen::Quaterniond(T_map_goal.linear()).w());
 
   m_ar_client_update.requestUpdates(20);
   sleep_for_async(std::chrono::nanoseconds(1s));
@@ -185,8 +193,8 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
     m_ar_client_update.lock();
     mode = m_ar_client_update.getMode();
     status = m_ar_client_update.getStatus();
-    RCLCPP_DEBUG_STREAM(this->get_logger(), "Mode: " << m_ar_client_update.getMode() << "\n" <<
-                                            "Status: " << m_ar_client_update.getStatus());
+    RCLCPP_INFO_STREAM(this->get_logger(), "Mode: " << m_ar_client_update.getMode() << "\n" <<
+                                           "Status: " << m_ar_client_update.getStatus());
 
     if(status[0] == 'A')
     {
