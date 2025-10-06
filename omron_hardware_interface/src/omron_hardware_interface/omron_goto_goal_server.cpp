@@ -194,8 +194,8 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
   packet.byte4ToBuf(ar_th);
 
   m_ar_client_update.requestUpdates(20);
-  sleep_for_async(std::chrono::nanoseconds(1s));
   m_ar_client->requestOnce("gotoPose", &packet);
+  sleep_for_async(std::chrono::nanoseconds(1s));
 
   std::string mode, status;
   while(m_ar_client->getRunningWithLock())
