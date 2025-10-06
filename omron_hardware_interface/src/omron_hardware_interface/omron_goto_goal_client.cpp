@@ -163,7 +163,7 @@ void OmronGotoGoalClient::go_to_pose__cb(const omron_msgs::srv::GotoPose::Reques
 
   const ArTypes::Byte4 ar_x =  std::round(T_map_goal.translation()(0) * 1e3);
   const ArTypes::Byte4 ar_y =  std::round(T_map_goal.translation()(1) * 1e3);
-  const ArTypes::Byte2 ar_th = std::round(Eigen::AngleAxisd(T_map_goal.linear()).angle() * 1e3);
+  const ArTypes::Byte2 ar_th = std::round(Eigen::AngleAxisd(T_map_goal.linear()).angle() * 180.0/ M_PI * 1e3);
   packet.byte4ToBuf(ar_x);
   packet.byte4ToBuf(ar_y);
   packet.byte2ToBuf(ar_th);

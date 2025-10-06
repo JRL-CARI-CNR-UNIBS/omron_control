@@ -191,7 +191,7 @@ OmronGotoGoalServer::execute_goto(const std::shared_ptr<GoalHandleGotoGoalAction
 
   packet.byte4ToBuf(ar_x);
   packet.byte4ToBuf(ar_y);
-  packet.byte2ToBuf(ar_th);
+  packet.byte4ToBuf(ar_th);
 
   m_ar_client_update.requestUpdates(20);
   sleep_for_async(std::chrono::nanoseconds(1s));
