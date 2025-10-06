@@ -10,6 +10,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(angles REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -29,7 +30,8 @@ set(SUPPORT_NODES_REQUIRED
   nav_msgs
   sensor_msgs
   omron_msgs
-  geometry_msgs)
+  geometry_msgs
+  angles)
 
 foreach(package IN ITEMS ${PACKAGES_REQUIRED_HERE})
   find_package(${package} REQUIRED)
@@ -87,10 +89,12 @@ add_executable(omron_support_nodes
   src/${PROJECT_NAME}/omron_map_client.cpp
   src/${PROJECT_NAME}/omron_laser_client.cpp
   src/${PROJECT_NAME}/omron_goto_goal_client.cpp
+  src/${PROJECT_NAME}/omron_goto_goal_server.cpp
   # Only for IDE
   include/${PROJECT_NAME}/omron_map_client.hpp
   include/${PROJECT_NAME}/omron_laser_client.hpp
   include/${PROJECT_NAME}/omron_goto_goal_client.hpp
+  include/${PROJECT_NAME}/omron_goto_goal_server.hpp
   )
 ament_target_dependencies(omron_support_nodes
   ${SUPPORT_NODES_REQUIRED}
